@@ -8,39 +8,49 @@ SKILL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 echo "Setting up pokemon-champions skill at: $SKILL_ROOT"
 
 # 1. Verify dependencies
-echo "[1/4] Checking dependencies..."
+echo "[1/6] Checking dependencies..."
 for cmd in bun python3 git; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "  ERROR: $cmd not found. Please install before running setup."
-    [ "$cmd" = "bun" ] && echo "  Hint: brew install bun"
+    echo "  ERROR: $cmd not found. Please install before running setup." >&2
+    [ "$cmd" = "bun" ] && echo "  Hint: brew install bun" >&2
     exit 1
   fi
   echo "  ✓ $cmd: $(command -v "$cmd")"
 done
 
 # 2. Install Bun deps
-echo "[2/4] Installing Bun dependencies..."
+echo "[2/6] Installing Bun dependencies..."
 cd "$SKILL_ROOT/scripts"
 bun install >/dev/null 2>&1
 echo "  ✓ @smogon/calc installed"
 
 # 3. Extract Showdown data → data/*.json (skip if VERSION.json already exists)
 if [ -f "$SKILL_ROOT/data/VERSION.json" ]; then
-  echo "[3/4] data/VERSION.json exists — skipping data extraction (delete to force refresh)"
+  echo "[3/6] data/VERSION.json exists — skipping data extraction (delete to force refresh)"
 else
-  echo "[3/4] Extracting Showdown data (this takes ~1-2 min)..."
+  echo "[3/6] Extracting Showdown data (this takes ~1-2 min)..."
   bun run extract_data.ts
   echo "  ✓ data/ populated"
 fi
 
 # 4. Build calc binary (skip if bin already exists)
 if [ -x "$SKILL_ROOT/bin/pokechamp-calc" ]; then
-  echo "[4/4] bin/pokechamp-calc exists — skipping build (delete to force rebuild)"
+  echo "[4/6] bin/pokechamp-calc exists — skipping build (delete to force rebuild)"
 else
-  echo "[4/4] Building calc binary..."
+  echo "[4/6] Building calc binary..."
   bash "$SKILL_ROOT/scripts/build_calc.sh"
   echo "  ✓ bin/pokechamp-calc built ($(du -h "$SKILL_ROOT/bin/pokechamp-calc" | cut -f1))"
 fi
+
+# 5. Build Champions overrides JSON (idempotent, hand-curated)
+echo "[5/6] Building data/champions_overrides.json..."
+python3 "$SKILL_ROOT/scripts/build_champions_overrides.py" >/dev/null
+echo "  ✓ champions_overrides.json regenerated"
+
+# 6. Build Champions implementation flags JSON
+echo "[6/6] Building data/champions_implementation.json..."
+python3 "$SKILL_ROOT/scripts/build_champions_implementation.py" >/dev/null
+echo "  ✓ champions_implementation.json regenerated"
 
 # Smoke test
 echo ""

@@ -1,25 +1,25 @@
 {
-  "generated_at": "2026-04-29T11:49:33.367Z",
+  "generated_at": "2026-04-30T05:24:05.535Z",
   "fixtures_total": 10,
   "fixtures_passed": 10,
   "fixtures_failed": 0,
   "t1_latency": {
     "samples": [
-      75.79216699999984,
-      76.81524999999988,
-      77.80479100000002,
-      78.24024999999995,
-      78.50245800000005,
-      78.85770900000011,
-      78.95787500000006,
-      79.13066700000013,
-      79.19054200000005,
-      79.65500000000009
+      75.54616699999997,
+      75.91783299999997,
+      75.94741599999998,
+      76.25362500000006,
+      77.47749999999996,
+      77.77470800000015,
+      78.02929099999983,
+      78.04379199999994,
+      79.28100000000006,
+      81.72458400000005
     ],
-    "min_ms": 75.79,
-    "median_ms": 78.86,
-    "mean_ms": 78.29,
-    "max_ms": 79.66,
+    "min_ms": 75.55,
+    "median_ms": 77.77,
+    "mean_ms": 77.6,
+    "max_ms": 81.72,
     "budget_ms": 300,
     "budget_pass": true
   },
@@ -31,8 +31,8 @@
       "percent_max": 138.1,
       "ko_chance_n": 1,
       "desc": "252 Atk Choice Band Garchomp Earthquake vs. 4 HP / 0 Def Mimikyu: 295-348 (117 - 138%) -- guaranteed OHKO",
-      "wall_ms": 82.25,
-      "elapsed_ms_internal": 4.59,
+      "wall_ms": 159.76,
+      "elapsed_ms_internal": 4.64,
       "reasons": []
     },
     {
@@ -42,8 +42,8 @@
       "percent_max": 163.6,
       "ko_chance_n": 1,
       "desc": "252 Atk Life Orb Garchomp Earthquake vs. 252 HP / 0 Def Clodsire: 642-759 (138.3 - 163.5%) -- guaranteed OHKO",
-      "wall_ms": 79.68,
-      "elapsed_ms_internal": 3.6,
+      "wall_ms": 77.69,
+      "elapsed_ms_internal": 3.7,
       "reasons": []
     },
     {
@@ -53,8 +53,8 @@
       "percent_max": 218.5,
       "ko_chance_n": 1,
       "desc": "252 Atk Life Orb Tera Ground Garchomp Earthquake vs. 252 HP / 0 Def Clodsire: 858-1014 (184.9 - 218.5%) -- guaranteed OHKO",
-      "wall_ms": 77.78,
-      "elapsed_ms_internal": 3.89,
+      "wall_ms": 75.57,
+      "elapsed_ms_internal": 3.72,
       "reasons": []
     },
     {
@@ -64,8 +64,8 @@
       "percent_max": 114.4,
       "ko_chance_n": 1,
       "desc": "252 Atk Choice Band Garchomp Earthquake vs. 252 HP / 0 Def Garganacl: 390-462 (96.5 - 114.3%) -- 81.3% chance to OHKO",
-      "wall_ms": 80.88,
-      "elapsed_ms_internal": 4.44,
+      "wall_ms": 79.14,
+      "elapsed_ms_internal": 4.06,
       "reasons": []
     },
     {
@@ -75,8 +75,8 @@
       "percent_max": 28.6,
       "ko_chance_n": 4,
       "desc": "252+ Atk Huge Power Mawile-Mega Play Rough vs. 252 HP / 252+ Def Toxapex: 74-87 (24.3 - 28.6%) -- 98.9% chance to 4HKO",
-      "wall_ms": 80.17,
-      "elapsed_ms_internal": 4.95,
+      "wall_ms": 77.99,
+      "elapsed_ms_internal": 4.23,
       "reasons": []
     },
     {
@@ -86,8 +86,8 @@
       "percent_max": 83.7,
       "ko_chance_n": 2,
       "desc": "252 SpA Greninja Hydro Vortex (185 BP) vs. 252 HP / 252 SpD Tapu Koko: 244-288 (70.9 - 83.7%) -- guaranteed 2HKO",
-      "wall_ms": 79.88,
-      "elapsed_ms_internal": 4.2,
+      "wall_ms": 77.99,
+      "elapsed_ms_internal": 3.9,
       "reasons": []
     },
     {
@@ -97,8 +97,8 @@
       "percent_max": 68.4,
       "ko_chance_n": 2,
       "desc": "252 Atk Urshifu-Rapid-Strike Max Geyser (130 BP) vs. 4 HP / 0 Def Zacian-Crowned: 189-223 (57.9 - 68.4%) -- guaranteed 2HKO",
-      "wall_ms": 79.31,
-      "elapsed_ms_internal": 4.48,
+      "wall_ms": 78.86,
+      "elapsed_ms_internal": 4.63,
       "reasons": []
     },
     {
@@ -108,8 +108,8 @@
       "percent_max": 81.9,
       "ko_chance_n": 2,
       "desc": "252 Atk Life Orb burned Garchomp Earthquake vs. 252 HP / 0 Def Clodsire: 321-380 (69.1 - 81.8%) -- guaranteed 2HKO",
-      "wall_ms": 79.67,
-      "elapsed_ms_internal": 4.2,
+      "wall_ms": 76.04,
+      "elapsed_ms_internal": 3.76,
       "reasons": []
     },
     {
@@ -119,8 +119,8 @@
       "percent_max": 39.4,
       "ko_chance_n": 3,
       "desc": "252+ SpA Heatran Overheat vs. 252 HP / 252+ SpD Garganacl in Sun: 135-159 (33.4 - 39.3%) -- guaranteed 3HKO",
-      "wall_ms": 82.54,
-      "elapsed_ms_internal": 3.99,
+      "wall_ms": 76.62,
+      "elapsed_ms_internal": 3.97,
       "reasons": []
     },
     {
@@ -130,8 +130,8 @@
       "percent_max": 207.5,
       "ko_chance_n": 1,
       "desc": "252 SpA Iron Valiant Moonblast vs. 4 HP / 0 SpD Dragapult on a critical hit: 560-660 (176.1 - 207.5%) -- guaranteed OHKO",
-      "wall_ms": 79.49,
-      "elapsed_ms_internal": 3.93,
+      "wall_ms": 75.49,
+      "elapsed_ms_internal": 3.48,
       "reasons": []
     }
   ]

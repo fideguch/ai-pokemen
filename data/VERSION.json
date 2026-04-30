@@ -6,6 +6,10 @@
   "pokeapi_csv_source": "https://github.com/PokeAPI/pokeapi/tree/master/data/v2/csv",
   "pokeapi_jp_lang_id": "1",
   "generated_at": "2026-04-28T08:24:10.677Z",
+  "champions_overrides_version": "1.0.0",
+  "champions_overrides_generated_at": "2026-04-30T04:20:13.835984+00:00",
+  "champions_implementation_version": "1.0.0",
+  "champions_implementation_generated_at": "2026-04-30T14:30:00+00:00",
   "counts": {
     "pokemon": 1516,
     "moves": 954,
@@ -19,6 +23,19 @@
     "ja_names_items": 2103,
     "ja_names_types": 21,
     "jp_form_matched": 196,
-    "jp_form_missed": 295
+    "jp_form_missed": 295,
+    "champions_overrides_moves": 8,
+    "champions_overrides_buffs_moves": 6,
+    "champions_overrides_conditions": 3,
+    "champions_implementation_items": 18,
+    "champions_implementation_pokemon_gmax": 34,
+    "champions_implementation_pokemon_regional": 55,
+    "champions_implementation_megastones_total": 93,
+    "champions_implementation_megastones_confirmed": 44
+  },
+  "notes": {
+    "pokedex_vs_learnsets_diff": "1516 vs 1287 = 229 体差。Showdown は forme/cosmetic を pokedex に登録、learnsets は base のみ → 設計通り、修正不要",
+    "smogon_data_role": "data/stats/ は Smogon 補助参考、Champions 用は cache/champs_usage/",
+    "regional_forms_count_actual": "55 (alola/galar/hisui/paldea ID suffix). 仕様書 61 は仮値、実データに基づく 55 を採用"
   }
 }

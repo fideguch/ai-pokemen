@@ -25,6 +25,49 @@ Pokemon Champions シングル6vs3対戦の **廃人トレーナーモード** C
 
 ---
 
+## クイックスタート
+
+新しい Mac でゼロから動かす最短手順:
+
+```bash
+# 1. リポジトリ取得
+git clone git@github.com:fideguch/ai-pokemen.git ~/ai-pokemen
+
+# 2. Claude Code スキルとしてシンボリックリンク
+mkdir -p ~/.claude/skills
+ln -sfn ~/ai-pokemen ~/.claude/skills/pokemon-champions
+
+# 3. セットアップ (依存チェック → bun install → calc binary → Champions overrides/implementation)
+bash ~/ai-pokemen/scripts/setup.sh
+
+# 4. 動作確認
+python3 ~/ai-pokemen/scripts/lookup_move.py ポルターガイスト
+# 期待: 威力 110 / 命中 100% / Physical / Ghost / [Champions 仕様適用 ナシ (Showdown 値)]
+
+python3 ~/ai-pokemen/scripts/lookup_move.py ムーンフォース
+# 期待: 追加効果 spa-1 10% (Champions 仕様適用) — Showdown 標準は 30%
+
+# 5. テストスイート
+python3 ~/ai-pokemen/tests/test_lib.py            # 31 unit tests
+python3 ~/ai-pokemen/tests/test_champions_overlay.py  # 14 overlay tests
+cd ~/ai-pokemen/scripts && bun run_fixtures.ts    # 10 calc fixtures
+```
+
+依存: `bun` / `python3` / `git`。`brew install bun` で全部入る (Python は pyenv/system 何でも可)。
+
+## 個人機能 (オプショナル)
+
+以下は **作者個人の dotfiles 連携** であり、無くてもスキルは完全動作する (fail-soft):
+
+| 機能 | 依存 | 不在時の挙動 |
+|------|------|------------|
+| 応答末尾 `poke -n <name>` でターミナル背景 | `~/.my_commands/poke` (作者の dotfiles) | スキップ (応答は維持) |
+| bochi メモ自動同期 | `~/.claude/bochi-data/memos/pokechamp-*` | スキップ (個人ノート機能なので不要) |
+
+`scripts/` / `lib/` のコードは上記の有無に依存しないよう設計済み。
+
+---
+
 ## できること
 
 | 用途 | Tier | 想定レイテンシ | 出力 |
