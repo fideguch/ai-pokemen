@@ -3,6 +3,7 @@
 Pokemon Champions シングル6vs3対戦の **廃人トレーナーモード** Claude Code スキル。
 `/pokechamp` で発動するとセッション持続でガチ廃人ペルソナが起動し、ダメ計即時 / 構築アドバイス / 最新メタを 3-tier latency で提供する。
 **Champions 公式ナーフ (ムンフォ 30→10%, par 25→12.5% 等) を内部 overlay 適用**、ダメ計には Showdown 素値、ユーザー表示には Champions 仕様で完全分離。
+パラドックス・禁忌の四災・禁伝など **Reg M-A 規格外候補は TBD ガード** で誤評価防止 (v0.3.2)。
 
 ---
 
@@ -91,6 +92,7 @@ cd ~/ai-pokemen/scripts && bun run_fixtures.ts              # 10 calc fixtures
 - **ポケモン**: 1516体 (リージョン形態 55 含む / パラドックス含む)
 - **技**: 954技 (Champions ナーフ反映 8 件 + バフ 6 件) / **特性**: 318 / **道具**: 583
 - **メガストーン**: 93 件 (確認済 44 / TBD 49)
+- **TBD ガード対象** (構築提案前に ⚠ 警告): パラドックス 18 + 禁忌の四災 4 + 禁伝 12 + 準伝/幻 5 = **39 体** (Champions Reg M-A 規格外/未アナウンス、公式確認要)
 - **状態異常 Champions 仕様**: par 12.5% / frz 3T 解除 / slp 3T 起き保証 / やどりぎ 1/16
 - **日本語名**: 1221体 + 196形態 (PokeAPI 公式翻訳 + Showdown翻訳)
 
@@ -256,7 +258,7 @@ cd ~/ai-pokemen/scripts && bun run_fixtures.ts              # 10 calc fixtures
 
 ```bash
 python3 ~/ai-pokemen/tests/test_lib.py                    # 31/31 PASS (lookup, intent_router, visualizer, persona, session_state)
-python3 ~/ai-pokemen/tests/test_champions_overlay.py      # 19/19 PASS (overlay + schema + design invariant)
+python3 ~/ai-pokemen/tests/test_champions_overlay.py      # 26/26 PASS (overlay + schema + TBD ガード + design invariant)
 cd ~/ai-pokemen/scripts && bun run_fixtures.ts            # 10/10 PASS, T1 median ~80ms
 bash ~/ai-pokemen/scripts/setup.sh                        # idempotent, end-to-end smoke test (OHKO assertion)
 ```
@@ -291,6 +293,16 @@ bash ~/ai-pokemen/scripts/setup.sh                        # idempotent, end-to-e
 - ダメ計 (`bin/pokechamp-calc`) は build 時に `@smogon/calc` をバンドル、Python 系統に依存しない → **構造的に overlay 混入不可能**
 - `tests/test_champions_overlay.py::TestLookupDesignInvariant` がこの不変条件を強制 (将来回帰防止)
 
+### TBD ガード (v0.3.2 — Default-Permissive Trap 修正)
+
+過去の事故 (パオジアンを「Tier S 環境最強格」と誤評価) を構造的に防ぐ仕組み:
+
+- `is_implemented(category, sid)` は **3 値返却**: `True` (確定実装) / `False` (確定未実装) / `"TBD"` (公式未確認)
+- `bool("TBD") == True` の罠を閉じるため、**素朴な `if is_implemented(...):` ではなく `is True` で厳密判定** を SKILL.md Sec 13 で mandate
+- `requires_tbd_warning()` 補助関数で「⚠ TBD 警告必須」を 1 行判定可能
+- パラドックス/禁忌四災/禁伝/準伝の **39 体** を `champions_implementation.json` に明示登録 (kind: `paradox` / `treasures_of_ruin` / `legendary` / `mythical`)
+- forge_ace v4.0 に **anti-pattern #13 Default-Permissive Trap** を追加、今後の Type B 変更でも自動検出される (上流リポジトリ `my_dotfiles/claude/skills/forge_ace/` 側で管理)
+
 ### 既存 `poke` との完全独立 (Decoupling)
 
 - 既存 `~/my_dotfiles/.my_commands/poke*` は **改変なし**
@@ -324,7 +336,8 @@ bash ~/ai-pokemen/scripts/setup.sh                        # idempotent, end-to-e
 
 | Version | Date | 内容 |
 |---|---|---|
-| **v0.3.1** | 2026-04-30 | implementation.json schema 1.1.0 (kind/region 追加 — region 単位クエリ可)、setup.sh yt-dlp WARN 追加、README フル書換 |
+| **v0.3.2** | 2026-04-30 | **Default-Permissive Trap 修正**: パオジアン誤評価事故の根本対策。`is_implemented` を 3 値返却 (True/False/"TBD") に修正、パラドックス 18 + 禁忌四災 4 + 禁伝 12 + 準伝 5 = 39 体を TBD 登録、schema 1.2.0、`requires_tbd_warning()` 追加、SKILL.md Sec 13 に「LLM 自己チェック手順」追加。forge_ace 上流に anti-pattern #13 同期 |
+| v0.3.1 | 2026-04-30 | implementation.json schema 1.1.0 (kind/region 追加 — region 単位クエリ可)、setup.sh yt-dlp WARN 追加、README フル書換 |
 | v0.3.0 | 2026-04-30 | Champions overrides architecture (3 層 SSOT、overlay/raw 分離)、portability (clone-and-run、abs-path 0)、forge_ace 5-Agent Gate 通過 |
 | v0.2.0 | 2026-04-30 | 14 source tier system + DB-first build proposals |
 | v0.1.0 | 2026-04-29 | 初回リリース、forge_ace + gatekeeper SHIP_WITH_CONDITIONS |
