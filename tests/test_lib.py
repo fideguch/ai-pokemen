@@ -101,21 +101,74 @@ class TestVisualizer(unittest.TestCase):
     def test_damage_table_basic(self):
         out = visualizer.render_damage_table(
             {"percent_min": 117, "percent_max": 138, "damage": [295, 348],
+             "defender_max_hp": 252,
              "ko_chance": {"text": "guaranteed OHKO"}, "desc": "rolled"},
             "Garchomp", "Mimikyu", attacker_jp="ガブリアス", defender_jp="ミミッキュ",
         )
         self.assertIn("ガブリアス", out)
         self.assertIn("ミミッキュ", out)
-        self.assertIn("117%", out)
-        self.assertIn("138%", out)
+        self.assertIn("117", out)  # 117.0% formatted
+        self.assertIn("138", out)
         self.assertIn("guaranteed OHKO", out)
+        self.assertIn("💀", out)  # OHKO marker
 
-    def test_damage_table_ascii_bar(self):
+    def test_damage_table_hp_gauge(self):
         out = visualizer.render_damage_table(
-            {"percent_min": 50, "percent_max": 60, "damage": [100, 120], "ko_chance": {}, "desc": ""},
+            {"percent_min": 50, "percent_max": 60, "damage": [100, 120],
+             "defender_max_hp": 200, "ko_chance": {}, "desc": ""},
             "A", "B",
         )
-        self.assertIn("█", out)
+        self.assertIn("█", out)  # HP filled
+        self.assertIn("░", out)  # HP empty (damaged area)
+        self.assertIn("HP前", out)
+        self.assertIn("HP後", out)
+
+    def test_hp_gauge_color_zones(self):
+        # >50%: green
+        self.assertIn("🟢", visualizer.render_hp_gauge(75))
+        # 20-50%: yellow
+        self.assertIn("🟡", visualizer.render_hp_gauge(35))
+        # <20%: red
+        self.assertIn("🔴", visualizer.render_hp_gauge(10))
+        # 0%: red
+        self.assertIn("🔴", visualizer.render_hp_gauge(0))
+
+    def test_pokemon_card_garchomp(self):
+        """Pokemon card with type JP names + move JP/EN resolution."""
+        card = visualizer.render_pokemon_card("garchomp", {
+            "slot": 1,
+            "item": "きあいのタスキ", "ability": "さめはだ", "nature": "ようき",
+            "evs": "AS252+B4",
+            "moves": ["じしん", "げきりん"],
+            "role": "ステロ撒き要員",
+        })
+        self.assertIn("ガブリアス", card)
+        self.assertIn("Garchomp", card)
+        self.assertIn("ドラゴン", card)  # Type JP
+        self.assertIn("じめん", card)
+        self.assertIn("100", card)  # Earthquake basePower (JP resolve OK)
+        self.assertIn("ようき", card)
+        self.assertIn("S↑/C↓", card)  # Nature hint
+        self.assertIn("ステロ撒き", card)
+
+    def test_sprite_tool_fail_soft(self):
+        """Sprite tool detection should never raise; return empty if absent."""
+        result = visualizer.render_pokemon_sprite("garchomp")
+        self.assertIsInstance(result, str)  # empty or sprite text
+
+    def test_showdown_export_format(self):
+        """Pokemon Showdown text export format compliance."""
+        out = visualizer.export_showdown_format([
+            {"pokemon_id": "garchomp", "item": "Focus Sash", "ability": "Rough Skin",
+             "nature": "Jolly", "evs": {"atk": 252, "spe": 252, "def": 4},
+             "moves": ["じしん", "げきりん"]},
+        ])
+        self.assertIn("Garchomp @ Focus Sash", out)
+        self.assertIn("Ability: Rough Skin", out)
+        self.assertIn("EVs: 252 Atk / 4 Def / 252 Spe", out)
+        self.assertIn("Jolly Nature", out)
+        self.assertIn("- Earthquake", out)  # JP → EN resolved
+        self.assertIn("- Outrage", out)
 
     def test_type_matchup_ground(self):
         # Ground pokemon -> water 2x, electric 0x, ice 2x, etc.
