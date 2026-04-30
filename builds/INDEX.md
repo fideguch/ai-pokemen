@@ -109,3 +109,7 @@
 - 過去構築 (Archived): `./archive/`
 - 対戦ログ: `../battle_logs/`
 - スキル本体: `../SKILL.md`
+- **★ メタ対策メモ (LATEST)**: `../meta/META-LATEST.md` — 環境 TOP20 + 自構築対策マトリクス + アーキ別選出 (日次更新)
+- メタ更新履歴: `../meta/CHANGELOG.md`
+- メタ運用 SOP: `../meta/README.md`
+- 過去メタスナップショット: `../meta/archive/`
