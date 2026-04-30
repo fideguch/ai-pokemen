@@ -131,6 +131,52 @@ class TestImplementationFlags(unittest.TestCase):
                              f"{k} should be implemented=False")
 
 
+class TestSchemaKindRegion(unittest.TestCase):
+    """Schema 1.1.0: kind/region fields enable category-based queries."""
+
+    def test_all_pokemon_have_kind(self):
+        impl = load_implementation()
+        for k, v in impl["pokemon"].items():
+            self.assertIn("kind", v, f"{k} missing 'kind' field")
+            self.assertIn(v["kind"], ("gmax", "regional"),
+                          f"{k}.kind = {v['kind']!r}, expected gmax|regional")
+
+    def test_all_gmax_kind_consistent(self):
+        impl = load_implementation()
+        gmax_keys = [k for k in impl["pokemon"] if k.endswith("gmax")]
+        for k in gmax_keys:
+            self.assertEqual(impl["pokemon"][k]["kind"], "gmax",
+                             f"{k} should have kind='gmax'")
+            self.assertIsNone(impl["pokemon"][k]["region"],
+                              f"{k} gmax should have region=None")
+
+    def test_regional_region_detected(self):
+        impl = load_implementation()
+        regions_seen = set()
+        for k, v in impl["pokemon"].items():
+            if v["kind"] == "regional":
+                self.assertIn(v["region"], ("alola", "galar", "hisui", "paldea"),
+                              f"{k}.region = {v['region']!r}")
+                self.assertTrue(k.endswith(v["region"]),
+                                f"{k} should end with {v['region']!r}")
+                regions_seen.add(v["region"])
+        # At least 3 of 4 regions present
+        self.assertGreaterEqual(len(regions_seen), 3,
+                                f"only saw regions {regions_seen}")
+
+    def test_megastone_kind(self):
+        impl = load_implementation()
+        for k, v in impl["megastones"].items():
+            self.assertEqual(v.get("kind"), "megastone", f"{k} missing kind=megastone")
+
+    def test_items_moves_kind(self):
+        impl = load_implementation()
+        for k, v in impl["items"].items():
+            self.assertEqual(v.get("kind"), "item", f"{k} missing kind=item")
+        for k, v in impl["moves"].items():
+            self.assertEqual(v.get("kind"), "move", f"{k} missing kind=move")
+
+
 class TestLookupDesignInvariant(unittest.TestCase):
     """get_move (default) returns RAW to protect damage calc input."""
 

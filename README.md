@@ -1,7 +1,8 @@
-# pokemon-champions
+# pokemon-champions (ai-pokemen)
 
 Pokemon Champions シングル6vs3対戦の **廃人トレーナーモード** Claude Code スキル。
 `/pokechamp` で発動するとセッション持続でガチ廃人ペルソナが起動し、ダメ計即時 / 構築アドバイス / 最新メタを 3-tier latency で提供する。
+**Champions 公式ナーフ (ムンフォ 30→10%, par 25→12.5% 等) を内部 overlay 適用**、ダメ計には Showdown 素値、ユーザー表示には Champions 仕様で完全分離。
 
 ---
 
@@ -42,18 +43,20 @@ bash ~/ai-pokemen/scripts/setup.sh
 
 # 4. 動作確認
 python3 ~/ai-pokemen/scripts/lookup_move.py ポルターガイスト
-# 期待: 威力 110 / 命中 100% / Physical / Ghost / [Champions 仕様適用 ナシ (Showdown 値)]
+# 期待: 威力 110 / 命中 100% / Physical / Ghost (Showdown 値)
 
 python3 ~/ai-pokemen/scripts/lookup_move.py ムーンフォース
-# 期待: 追加効果 spa-1 10% (Champions 仕様適用) — Showdown 標準は 30%
+# 期待: 追加効果 spa-1 10% [Champions 仕様適用] — Showdown 標準は 30%
 
 # 5. テストスイート
-python3 ~/ai-pokemen/tests/test_lib.py            # 31 unit tests
-python3 ~/ai-pokemen/tests/test_champions_overlay.py  # 14 overlay tests
-cd ~/ai-pokemen/scripts && bun run_fixtures.ts    # 10 calc fixtures
+python3 ~/ai-pokemen/tests/test_lib.py                      # 31 unit tests
+python3 ~/ai-pokemen/tests/test_champions_overlay.py        # 19 overlay/schema tests
+cd ~/ai-pokemen/scripts && bun run_fixtures.ts              # 10 calc fixtures
 ```
 
-依存: `bun` / `python3` / `git`。`brew install bun` で全部入る (Python は pyenv/system 何でも可)。
+依存:
+- 必須: `bun` / `python3` / `git` (`brew install bun` で全部入る、Python は pyenv/system 何でも可)
+- オプション: `yt-dlp` (YouTube 字幕自動収集機能を使う場合のみ、`brew install yt-dlp`)
 
 ## 個人機能 (オプショナル)
 
@@ -63,8 +66,9 @@ cd ~/ai-pokemen/scripts && bun run_fixtures.ts    # 10 calc fixtures
 |------|------|------------|
 | 応答末尾 `poke -n <name>` でターミナル背景 | `~/.my_commands/poke` (作者の dotfiles) | スキップ (応答は維持) |
 | bochi メモ自動同期 | `~/.claude/bochi-data/memos/pokechamp-*` | スキップ (個人ノート機能なので不要) |
+| YouTube 字幕自動収集 | `yt-dlp` CLI | スキップ + WARN (他機能は完全動作) |
 
-`scripts/` / `lib/` のコードは上記の有無に依存しないよう設計済み。
+`scripts/` / `lib/` のコードは上記の有無に依存しないよう設計済み (絶対パス 0、ハードコード 0)。
 
 ---
 
@@ -75,15 +79,19 @@ cd ~/ai-pokemen/scripts && bun run_fixtures.ts    # 10 calc fixtures
 | ダメ計 (対面確認) | T1 | <300ms | 確定数 + 16通り乱数 + ASCIIバー |
 | 構築アドバイス / サイクル設計 | T2 | 1-5秒 | 役割対象マトリクス + 並び案複数 |
 | 最新メタ / 環境調査 | T3 | 5-30秒 | usage統計 + 鮮度マーク + 出典URL |
+| Champions 適合性判定 | 任意 | <10ms | `is_implemented(category, id)` で持ち物/技/ポケ/メガストーンの可否 |
 
 ペルソナは **ガチ廃人標準語・データ主導・図表ファースト・勝率最優先**。会話の中心ポケモン1体を選定し、応答末尾で `poke -n <英名>` を1回だけ呼んでターミナル背景を切替える (既存pokeコマンドへの依存)。
 
 ## 対応スコープ
 
 - **対戦フォーマット**: シングル6vs3 のみ (ダブル/VGC/トリプル/ローテは non-goals)
-- **メカニクス**: Gen 1-9 全世代 (テラスタル / ダイマックス / Z技 / メガ進化 / キョダイマックス 全対応、@smogon/calc 委譲)
-- **ポケモン**: 1516体 (リージョン形態・パラドックス含む)
-- **技**: 954技 / **特性**: 318 / **道具**: 583
+- **メカニクス**: Gen 1-9 全世代 (テラスタル / ダイマックス / Z技 / メガ進化 全対応、@smogon/calc 委譲)
+- **キョダイマックス**: Champions 未実装として処理 (gmax 全 34 体 = `implemented: false`)
+- **ポケモン**: 1516体 (リージョン形態 55 含む / パラドックス含む)
+- **技**: 954技 (Champions ナーフ反映 8 件 + バフ 6 件) / **特性**: 318 / **道具**: 583
+- **メガストーン**: 93 件 (確認済 44 / TBD 49)
+- **状態異常 Champions 仕様**: par 12.5% / frz 3T 解除 / slp 3T 起き保証 / やどりぎ 1/16
 - **日本語名**: 1221体 + 196形態 (PokeAPI 公式翻訳 + Showdown翻訳)
 
 ## 使い方
@@ -92,7 +100,8 @@ cd ~/ai-pokemen/scripts && bun run_fixtures.ts    # 10 calc fixtures
 あなた:    /pokechamp
 廃人:      ガチ環境モード起動した。
            データ: pokedex 1516 / moves 954 / abilities 318。Showdown commit pinned。
-           ダメ計: bin/pokechamp-calc (T1 wall-clock 中央値 ~180ms / 予算 300ms)。
+           ダメ計: bin/pokechamp-calc (T1 wall-clock 中央値 ~80ms / 予算 300ms)。
+           Champions overrides: 8 moves + 3 conditions, implementation: 18 items + 89 pokemon。
            何聞きたい？対面?選出?ダメ計?今期トップ?
 
 あなた:    鉢巻ガブのEQでミミ確定？
@@ -109,11 +118,16 @@ cd ~/ai-pokemen/scripts && bun run_fixtures.ts    # 10 calc fixtures
            ```
            → 1Hで沈むからミミ初手は危ない。テラ電気で透かしてくる前提で動け。
 
-あなた:    ガブ軸でサイクル組みたい
-廃人:      [T2: 役割対象マトリクス + 並び案 + 採用理由言語化]
+あなた:    ガブにゴツメ持たせて
+廃人:      ❌ ゴツゴツメット は Champions 未実装 (`is_implemented` False)。
+           代替: オボンのみ / きあいのタスキ (実装済リストから)。
+
+あなた:    ガブのムンフォは何%でC下げる？
+廃人:      Champions 仕様: 10% (Showdown 標準は 30%)。
+           overlay 経由で表示、ダメ計には素値が流れるので確定数は不変。
 
 あなた:    今期OUのTOP10は？
-廃人:      [T3: usage統計 + 鮮度マーク "📅 最終更新: 2026-04-26 / Smogon Gen9OU" + 出典URL]
+廃人:      [T3: cache/champs_usage/2026-04-30.json + 鮮度マーク "📅 6h 以内 / champs.pokedb.tokyo"]
 
 あなた:    /pokechamp off
 廃人:      モード解除。
@@ -121,132 +135,148 @@ cd ~/ai-pokemen/scripts && bun run_fixtures.ts    # 10 calc fixtures
 
 ## アーキテクチャ
 
+### 3 層 SSOT 構造 (Champions 対応の核)
+
 ```
-~/.claude/skills/pokemon-champions/
-├── SKILL.md                     # ペルソナ起動指示 + T1/T2/T3 ルーター + 図表原則
-├── bin/pokechamp-calc           # Bun単一バイナリ (@smogon/calc 0.11.0 ラップ、59MB)
-│                                  ※ scripts/setup.sh でビルド (gitignore対象)
-├── data/                        # Showdown data (commit 808f8584 pinned)
-│   ├── pokedex.json (488KB)     # 1516体
-│   ├── moves.json (260KB)       # 954技
-│   ├── abilities.json (30KB)
-│   ├── items.json (78KB)
-│   ├── learnsets.json (3.2MB)
-│   ├── typechart.json
-│   ├── natures.json
-│   ├── ja_names.json (312KB)    # 日英名マッピング
-│   ├── VERSION.json             # SSOT pin情報
-│   └── stats/                   # Smogon usage stats (鮮度命層、6h TTL)
-├── lib/                         # Pythonランタイム
-│   ├── lookup.py                # 日英/部分一致 → 内部ID解決
-│   ├── intent_router.py         # T1/T2/T3キーワード分類
-│   ├── visualizer.py            # ダメ計table / 役割マトリクス / 横棒グラフ
-│   ├── persona.py               # 廃人用語40語 GLOSSARY
-│   ├── session_state.py         # 会話継続state
-│   └── meta_fetcher.py          # WebFetch + 6h cache + stale fallback
+┌──────────────────────────────────────────────────────┐
+│ Layer 3: Champions 仕様レイヤー (overlay 適用後の値)     │
+│  → ユーザー表示、構築提案、HARD-GATE 判定               │
+│  → lib/champions_overlay.py 経由                      │
+├──────────────────────────────────────────────────────┤
+│ Layer 2: Champions 差分レイヤー                         │
+│  - data/champions_overrides.json (ナーフ/バフ差分のみ)  │
+│    例: ムンフォ chance 30→10, par 0.25→0.125           │
+│  - data/champions_implementation.json (使用可否フラグ)  │
+│    例: ベンサウルキョダイ → false / ゴツメ → false      │
+├──────────────────────────────────────────────────────┤
+│ Layer 1: Showdown 生データレイヤー (commit 808f8584)    │
+│  - data/{pokedex,moves,abilities,items,...}.json       │
+│  → ダメ計 (bin/pokechamp-calc) はこの素値を使う        │
+└──────────────────────────────────────────────────────┘
+```
+
+**設計原則**: Layer 1 はダメ計に流す (overlay 混入 禁止)、Layer 3 はユーザーに見せる。`get_move()` は Layer 1 (raw)、`get_move_overlayed()` は Layer 3 (Champions 適用済) — `lib/lookup.py` のシグネチャは不変、計算精度を構造的に保証。
+
+### ファイル構成
+
+```
+~/ai-pokemen/                              ← 独立 repo (= ~/.claude/skills/pokemon-champions symlink先)
+├── SKILL.md                               # ペルソナ起動指示 + T1/T2/T3 ルーター + 3 HARD-GATE
+├── README.md                              # このファイル
+├── bin/pokechamp-calc                     # Bun 単一バイナリ (@smogon/calc 0.11.0 ラップ、59MB、gitignore)
+├── data/
+│   ├── pokedex.json (488KB)               # 1516体 (Showdown 由来、gitignore)
+│   ├── moves.json (260KB)                 # 954技 (gitignore)
+│   ├── abilities.json / items.json / learnsets.json / typechart.json / natures.json / ja_names.json
+│   ├── champions_overrides.json           # ★ Champions ナーフ差分 (8 moves + 6 buffs + 3 conditions)
+│   ├── champions_implementation.json      # ★ Champions 使用可否 (89 pokemon + 93 megastones + 18 items + 7 moves)
+│   ├── VERSION.json                       # SSOT pin情報 (Showdown commit + Champions versions)
+│   ├── README.md                          # ★ 3 層 SSOT 解説 + lookup vs lookup_raw 使い分けガイド
+│   └── stats/                             # Smogon usage stats (補助参考、Champions 用ではない)
+├── lib/
+│   ├── lookup.py                          # 日英/部分一致 → 内部ID解決 (raw 系統)
+│   ├── champions_overlay.py               # ★ overlay 適用 + is_implemented + 補助関数
+│   ├── intent_router.py                   # T1/T2/T3キーワード分類
+│   ├── visualizer.py                      # ダメ計table / 役割マトリクス / 横棒グラフ
+│   ├── persona.py                         # 廃人用語40語 GLOSSARY
+│   ├── session_state.py                   # 会話継続state
+│   └── meta_fetcher.py                    # WebFetch + 6h cache + stale fallback
 ├── scripts/
-│   ├── setup.sh                 # 初回セットアップ (data取得 + calc binary build)
-│   ├── extract_data.ts          # Showdown TS → JSON 抽出
-│   ├── calc_wrapper.ts          # stdin/stdout JSON I/O
-│   ├── build_calc.sh            # bun build --compile
-│   ├── run_fixtures.ts          # 10 fixture 精度検証 + T1 latency計測
-│   ├── update_meta.sh           # 鮮度命層更新
-│   └── parse_usage.py           # Smogon stats parser
-├── tests/                       # 31 unit + 10 calc fixtures
-└── references/                  # 廃人spec集
-    ├── pokemon_champions_rules.md  # PCルール (公式情報未確定 markerあり)
-    ├── damage_formula.md           # @smogon/calc準拠 SSOT宣言
-    ├── modern_team_building.md     # 現代構築論 (動画概念インストール、出典URL+access date)
-    ├── role_theory.md              # 古典×現代役割理論
-    ├── meta_glossary.md            # 廃人用語集
-    └── persona_guide.md            # 廃人↔標準対応表40語 + 5発話サンプル + NG表現
+│   ├── setup.sh                           # 初回セットアップ (idempotent, 6 step + smoke test)
+│   ├── extract_data.ts                    # Showdown TS → JSON 抽出
+│   ├── calc_wrapper.ts / build_calc.sh    # bun build --compile → bin/
+│   ├── build_champions_overrides.py       # ★ overrides JSON 再生成
+│   ├── build_champions_implementation.py  # ★ implementation JSON 再生成 (kind/region 自動付与)
+│   ├── fetch_champs_usage.py              # ★ champs.pokedb.tokyo / pokechamdb.com から 6h TTL fetch
+│   ├── fetch_yt_transcripts.py            # ★ YouTube RSS + yt-dlp で字幕収集
+│   ├── lookup_move.py                     # CLI: 技データ overlay 適用済表示
+│   ├── run_fixtures.ts                    # 10 fixture 精度検証 + T1 latency計測
+│   └── parse_usage.py / update_meta.sh
+├── builds/                                # 構築 SSOT (multi-build 管理)
+│   ├── INDEX.md                           # 全構築 Status 表 (active/experimental/testing/archived)
+│   ├── A.3-Final-v7.8.md                  # 現 active 構築 (メガ2体軸)
+│   ├── _template.md                       # 新構築用テンプレ (13 節)
+│   └── archive/                           # 引退構築
+├── battle_logs/                           # 対戦ログ (年/月別)
+├── cache/
+│   ├── champs_usage/                      # 日次使用率 (gitignore)
+│   └── yt_transcripts/                    # 動画字幕 (gitignore)
+├── tests/                                 # 31 unit + 19 overlay/schema + 10 calc fixtures
+└── references/                            # 廃人 spec 集
+    ├── pokemon_champions_rules.md         # PCルール
+    ├── damage_formula.md                  # @smogon/calc準拠 SSOT宣言
+    ├── champions_overrides_sources.md     # ★ overrides 出典 (game8/altema/gamepedia/note)
+    ├── implementation_status.md           # 実装状況の文章版
+    ├── environment_archetypes.md          # 環境タイプ AT-01〜08
+    ├── build_proposal_protocol.md         # 構築提案手順書
+    ├── modern_team_building.md            # 現代構築論
+    ├── role_theory.md / meta_glossary.md / persona_guide.md
+    ├── authoritative_sources.md / realtime_access_methods.md / data_extraction_guide.md
+    └── remote_trigger_yt_spec.md          # ★ YT 自動収集 RemoteAgent 仕様書
 ```
 
-## データ戦略 (3-tier latency + 鮮度二層)
+## データ戦略
 
-### Tier別
+### 3-tier latency
 
 | Tier | データ | レイテンシ | ソース |
 |---|---|---|---|
-| **T1 即時** | ダメ計・種族値・タイプ・技性能・特性・道具 | <300ms | ローカル (Showdown同梱) |
+| **T1 即時** | ダメ計・種族値・タイプ・技性能・特性・道具 | <300ms (中央値 80ms) | ローカル (Showdown 同梱 + Champions overlay) |
 | **T2 研究** | 構築・サイクル・選出 | 1-5秒 | T1 + ローカル思考 |
-| **T3 最新** | 上位構築・使用率・型・立ち回り対策・メタ | 5-30秒 | WebFetch (Smogon stats / ポケ徹) + 6h cache |
+| **T3 最新** | 上位構築・使用率・型・立ち回り対策・メタ | 5-30秒 | `cache/champs_usage/` (6h TTL) + `cache/yt_transcripts/` (24h) |
 
-### 鮮度別
+### 鮮度二層
 
 | 層 | 内容 | TTL | 鮮度マーク |
 |---|---|---|---|
 | **スピード層** | ダメ計式・種族値・タイプ・技・特性・道具 | 1ヶ月 | 不要 (枯れた知識) |
-| **鮮度命層** | 上位構築・使用率・採用率・型・立ち回り | **6時間** | **必須** (タイムスタンプ + 出典URL) |
+| **鮮度命層** | Champions 上位構築・使用率・型 | **6時間** | **必須** (タイムスタンプ + 出典URL) |
 
-## セットアップ
+### Champions vs Smogon の使い分け
 
-### 前提
-
-- macOS (Bun + Python3 必須)
-- 既存 `poke` コマンド (https://github.com/fideguch/my_dotfiles `.my_commands/poke`) — オプション、応答末尾の背景連動用
-
-### 初期化
-
-```bash
-# 1. 依存ツール確認
-which bun python3 git
-# 不在なら:
-brew install bun
-# Python3 は pyenv/system 何でも可
-
-# 2. スキルクローン (or my_dotfiles 経由で symlink)
-SKILL_ROOT=~/.claude/skills/pokemon-champions
-ls $SKILL_ROOT/SKILL.md  # 存在確認
-
-# 3. データ取得 + calc binary ビルド (約2-3分、ネット必要)
-cd $SKILL_ROOT/scripts
-bun install
-bun run extract_data.ts        # Showdown shallow clone + JSON抽出
-bash build_calc.sh             # bun build --compile → bin/pokechamp-calc (59MB)
-
-# 4. 動作確認
-bash -c 'echo "{\"gen\":9,\"attacker\":{\"name\":\"Garchomp\",\"item\":\"Choice Band\",\"nature\":\"Jolly\",\"evs\":{\"atk\":252,\"spe\":252}},\"defender\":{\"name\":\"Mimikyu\",\"evs\":{\"hp\":4}},\"move\":{\"name\":\"Earthquake\"}}" | $SKILL_ROOT/bin/pokechamp-calc'
-# 期待: 117-138% guaranteed OHKO
-```
-
-### 鮮度命層の更新 (任意、推奨6h cron)
-
-```bash
-bash $SKILL_ROOT/scripts/update_meta.sh
-```
-
-launchctl で6時間ごとの自動更新を仕込みたい場合は別途 plist を作成。
+| 用途 | データソース |
+|---|---|
+| Champions 環境の使用率 / 構築トレンド | `cache/champs_usage/` (champs.pokedb.tokyo / pokechamdb.com) |
+| Smogon competitive 統計 (補助参考のみ) | `data/stats/gen9ou-*.json` |
+| Champions 仕様のナーフ確率・状態異常 | `data/champions_overrides.json` 経由 |
+| 各ポケ/持ち物/メガストーンの Champions 使用可否 | `data/champions_implementation.json` 経由 (`is_implemented()`) |
 
 ## 品質保証
 
-本スキルは以下のゲートを通過済み:
+### forge_ace v4.0 (5-Agent Quality Gate) 通過
 
-- ✅ **forge_ace v4.0** (5-Agent Quality Gate): Writer / Guardian / Overseer / PM-Admin
-- ✅ **gatekeeper v1.2.1** (HG-1〜HG-5): 仕様徹底確認・実機検証・推測修正禁止
-- ✅ **Type B Gate 3** (E2E): 5/5 シナリオ PASS
-- ✅ **Plan Quality Gate** (planner opus): GAFA 10軸評価
+| Agent | Verdict | スコア |
+|---|---|---|
+| **Writer** | WRITER_DONE_OK | Phase 0-8 完遂 |
+| **Guardian** (Opus, 8-axis) | GUARDIAN_PASS_WITH_NOTES | **73/80** (ship-ready ≥70) |
+| **Overseer** (architect/Opus) | OVERSEER_PASS | 7/7 要件 COVERED, 計算機隔離 watertight |
+| **PM-Admin** (Opus, E2E mandate) | PM_ADMIN_PASS_WITH_NOTES | **36/40** (ship ≥35), E2E **5/5 PASS** |
 
 ### テスト
 
 ```bash
-# Pythonユニット (31件)
-python3 ~/.claude/skills/pokemon-champions/tests/test_lib.py
-
-# Calc fixtures (10件、T1 latency計測込み)
-cd ~/.claude/skills/pokemon-champions/scripts && bun run_fixtures.ts
+python3 ~/ai-pokemen/tests/test_lib.py                    # 31/31 PASS (lookup, intent_router, visualizer, persona, session_state)
+python3 ~/ai-pokemen/tests/test_champions_overlay.py      # 19/19 PASS (overlay + schema + design invariant)
+cd ~/ai-pokemen/scripts && bun run_fixtures.ts            # 10/10 PASS, T1 median ~80ms
+bash ~/ai-pokemen/scripts/setup.sh                        # idempotent, end-to-end smoke test (OHKO assertion)
 ```
 
-期待: 全PASS / T1 wall-clock 中央値 <300ms
+### セキュリティ / Portability チェック
+
+- 絶対パスハードコード: **0 件** (`grep -r "/Users/" --include="*.py"`)
+- シークレット (API_KEY/TOKEN): **0 件**
+- bochi/poke 個人依存: lib/scripts に **0 件** (fail-soft 設計)
 
 ## 既知の制約
 
 | 項目 | 状態 | 影響度 |
 |---|---|---|
 | Pokemon Champions 公式 URL/レギュレーション | 未確定 (公式アナウンス待ち、`_PENDING` マーカー) | 低 (graceful fallback) |
-| Form名英名フォールバック | 295件 (リージョン形態の一部) JP未マッチ | 低 (英名+注釈表示で動作) |
-| Smogon stats月次更新 | cron未自動化 | 低 (手動 `update_meta.sh` で対応可) |
-| 公式ルール変更時のデータ更新 | 手動 (`extract_data.ts` 再実行) | 中 (アプデ通知に追従が必要) |
+| Form 名英名フォールバック | 295件 (リージョン形態の一部) JP未マッチ | 低 (英名+注釈表示で動作) |
+| Champions overrides の出典 | 4 個別ソース (game8/altema/gamepedia/note) を手動照合 | 中 (公式ソース確定後に再照合推奨) |
+| メガストーン 49 件 TBD | 公式アナウンス未確認 | 中 (`is_implemented` で TBD 返却、fail-safe) |
+| YouTube 字幕収集 | yt-dlp 別途 install 必要 | 低 (fail-soft、他機能は完全動作) |
+| 公式ルール変更時のデータ更新 | 手動 (`extract_data.ts` + Champions overrides 再キュレーション) | 中 (Champions パッチ通知に追従が必要) |
 
 ## 設計方針
 
@@ -254,16 +284,20 @@ cd ~/.claude/skills/pokemon-champions/scripts && bun run_fixtures.ts
 
 `/pokechamp` 発動 → セッション終了 or `/pokechamp off` までガチ廃人モード継続。会話文脈を保持し、「さっきの計算」「もっと受け足したい」等の参照解決に対応。
 
+### Champions overlay の安全側設計 (Calc Isolation)
+
+- `lib/lookup.py` の `get_move/get_item/get_ability` は **Showdown 素値を返す** (overlay 適用しない)
+- `lib/champions_overlay.py` の `get_move_overlayed` は Champions 仕様 (ムンフォ 10% 等) を返す
+- ダメ計 (`bin/pokechamp-calc`) は build 時に `@smogon/calc` をバンドル、Python 系統に依存しない → **構造的に overlay 混入不可能**
+- `tests/test_champions_overlay.py::TestLookupDesignInvariant` がこの不変条件を強制 (将来回帰防止)
+
 ### 既存 `poke` との完全独立 (Decoupling)
 
 - 既存 `~/my_dotfiles/.my_commands/poke*` は **改変なし**
 - スキルは独立したデータ・ロジックを持つ
-- 連携は出力末尾で `poke -n <英名>` を1回呼び出すのみ (オプショナル)
+- 連携は出力末尾で `poke -n <英名>` を1回呼び出すのみ (オプショナル、不在時 skip)
 
 ### 現代構築論ベース (Modern Team Building)
-
-参考動画: 「【ガチ勢が解説】ポケモンの構築の種類、ちゃんと理解してる…？？」(2026-04 公開)
-参考note: ポケモンチャンピオンズ：マスター到達までに遊んだ構築と考え方
 
 - 古典的分類 (対面/サイクル/受けループ/バランス) は実戦では融合
 - 採用理由言語化が最優先 (「強いから」じゃなく「何の役割か」)
@@ -272,13 +306,25 @@ cd ~/.claude/skills/pokemon-champions/scripts && bun run_fixtures.ts
 
 詳細: `references/modern_team_building.md`
 
+### multi-build 管理 (Build SSOT)
+
+- `builds/INDEX.md` で全構築の Status (active/experimental/testing/archived) を一元管理
+- 構築追加は `_template.md` から複製して 13 節埋める
+- bochi 同期メモ (`~/.claude/bochi-data/memos/pokechamp-*`) は本家 `builds/` の参照コピー (read-only)
+
 ## ライセンス・出典
 
 - **@smogon/calc** (MIT, https://github.com/smogon/damage-calc) — ダメ計エンジン
-- **smogon/pokemon-showdown** (MIT, https://github.com/smogon/pokemon-showdown) — データソース (commit 808f8584 pinned)
-- **PokeAPI CSV data** (BSD 3-Clause) — 日本語名 (1221件)
-- **Smogon Stats** (https://www.smogon.com/stats/) — 鮮度命層 usage統計
+- **smogon/pokemon-showdown** (MIT, https://github.com/smogon/pokemon-showdown) — データソース (commit `808f8584` pinned)
+- **PokeAPI CSV data** (BSD 3-Clause) — 日本語名 (1221体 + 196形態)
+- **champs.pokedb.tokyo / pokechamdb.com** — Champions 使用率参考 (公開 web データ、cache のみ保存)
+- **game8.jp / altema.jp / app.gamepedia.jp / note.com** — Champions ナーフ情報出典 (`references/champions_overrides_sources.md` に記録)
 
-## バージョン
+## バージョン履歴
 
-- v0.1.0 (2026-04-29) — 初回リリース、forge_ace + gatekeeper SHIP_WITH_CONDITIONS
+| Version | Date | 内容 |
+|---|---|---|
+| **v0.3.1** | 2026-04-30 | implementation.json schema 1.1.0 (kind/region 追加 — region 単位クエリ可)、setup.sh yt-dlp WARN 追加、README フル書換 |
+| v0.3.0 | 2026-04-30 | Champions overrides architecture (3 層 SSOT、overlay/raw 分離)、portability (clone-and-run、abs-path 0)、forge_ace 5-Agent Gate 通過 |
+| v0.2.0 | 2026-04-30 | 14 source tier system + DB-first build proposals |
+| v0.1.0 | 2026-04-29 | 初回リリース、forge_ace + gatekeeper SHIP_WITH_CONDITIONS |

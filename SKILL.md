@@ -421,7 +421,7 @@ DB の数字 (使用率 / 採用率) は **2 通りの読み方** がある。
 | poke -n integration | OK (existing) | `~/.my_commands/poke*` を read-only で参照 |
 | champions_overlay.py | OK | `tests/test_champions_overlay.py` 14/14 PASS, get_move/raw 系統分離 |
 | champions_overrides.json | OK | 8 moves + 6 buffs + 3 conditions + 18 ability/item meta |
-| champions_implementation.json | OK | 18 items + 7 moves + 89 pokemon (gmax 34 + 形態 55) + 93 megastones |
+| champions_implementation.json | OK (schema 1.1.0) | 18 items + 7 moves + 89 pokemon (gmax 34 + 形態 55) + 93 megastones、`kind`/`region` フィールド対応で region 単位クエリ可 |
 | fetch_champs_usage.py | OK | 6h TTL, --force/--dry-run 対応, fail-soft on HTTP error |
 | fetch_yt_transcripts.py | OK | 24h RSS scan, yt-dlp 不在時 fail-soft |
 

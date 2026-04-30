@@ -18,6 +18,14 @@ for cmd in bun python3 git; do
   echo "  ✓ $cmd: $(command -v "$cmd")"
 done
 
+# Optional dependency: yt-dlp (for fetch_yt_transcripts.py — fail-soft)
+if ! command -v yt-dlp >/dev/null 2>&1; then
+  echo "  [WARN] yt-dlp not installed — YouTube transcript fetch will skip (fail-soft)." >&2
+  echo "         To enable: brew install yt-dlp" >&2
+else
+  echo "  ✓ yt-dlp: $(command -v yt-dlp) (optional, for YT transcripts)"
+fi
+
 # 2. Install Bun deps
 echo "[2/6] Installing Bun dependencies..."
 cd "$SKILL_ROOT/scripts"

@@ -112,6 +112,40 @@
 - **ユーザーに「ムンフォは 30% C-1」と表示するときは `get_move_overlayed`**: Champions 仕様で 10% と返す
 - **構築提案前は必ず `is_implemented` で確認**: 未実装持ち物を提案するのは HG-1 違反
 
+## champions_implementation.json schema (v1.1.0)
+
+各 entry は以下のフィールドを持つ:
+
+| フィールド | 型 | 必須 | 説明 |
+|---|---|---|---|
+| `implemented` | bool / "TBD" | ✅ | true=使用可 / false=使用不可 / "TBD"=確認待ち |
+| `kind` | string | ✅ (v1.1.0+) | "item" / "move" / "gmax" / "regional" / "megastone" |
+| `region` | string / null | ✅ (v1.1.0+) | "alola" / "galar" / "hisui" / "paldea" / null |
+| `jp_name` | string | optional | 日本語名 |
+| `reason` | string | optional | implemented=false/TBD の理由 |
+| `_note` | string | optional | 補足メモ |
+
+### kind/region による集計クエリ例
+
+```bash
+# Gmax 全件 (Champions 未実装)
+jq -r '.pokemon | to_entries[] | select(.value.kind == "gmax") | .key' data/champions_implementation.json
+
+# ヒスイ形態だけリストアップ
+jq -r '.pokemon | to_entries[] | select(.value.region == "hisui") | .key' data/champions_implementation.json
+
+# 実装確認済みメガストーン
+jq -r '.megastones | to_entries[] | select(.value.implemented == true) | .key' data/champions_implementation.json
+
+# region 別集計
+jq '.pokemon | to_entries[] | select(.value.kind == "regional") | .value.region' data/champions_implementation.json | sort | uniq -c
+```
+
+### schema 変更履歴
+
+- **1.0.0** (初期): `implemented` + `reason` + `jp_name` フラット構造
+- **1.1.0** (強化): `kind` + `region` 追加。**API 不変、追加フィールドのみ後方互換**。
+
 ## 関連ドキュメント
 
 - `references/champions_overrides_sources.md` — overrides の出典スナップショット (game8/altema/gamepedia/note)

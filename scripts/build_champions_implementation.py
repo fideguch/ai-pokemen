@@ -125,48 +125,61 @@ def _load_items() -> dict:
     return json.loads(ITEMS.read_text(encoding="utf-8"))
 
 
+REGIONS = ("alola", "galar", "hisui", "paldea")
+
+
+def _detect_region(key: str) -> str | None:
+    for r in REGIONS:
+        if key.endswith(r):
+            return r
+    return None
+
+
 def gen_gmax_entries() -> dict[str, dict]:
-    """All gmax entries → implemented=False (not in Champions)."""
+    """All gmax entries → implemented=False (not in Champions). kind='gmax'."""
     pdex = _load_pokedex()
     out = {}
     for k, v in pdex.items():
         if k.endswith("gmax"):
             out[k] = {
                 "implemented": False,
+                "kind": "gmax",
+                "region": None,
                 "reason": "キョダイマックスは Champions に存在しない (SWSH 特有、Champions ベースは SV)",
             }
     return out
 
 
 def gen_regional_form_entries() -> dict[str, dict]:
-    """Alola/Galar/Hisui/Paldea forms → implemented=TBD (公式確認待ち)."""
+    """Alola/Galar/Hisui/Paldea forms → implemented=TBD. kind='regional', region detected."""
     pdex = _load_pokedex()
     out = {}
     for k in pdex.keys():
-        if k.endswith(("alola", "galar", "hisui", "paldea")):
+        if k.endswith(REGIONS):
             out[k] = {
                 "implemented": "TBD",
+                "kind": "regional",
+                "region": _detect_region(k),
                 "reason": "リージョンフォームの実装は Champions 公式アナウンス要確認",
             }
     return out
 
 
 def gen_megastone_entries() -> dict[str, dict]:
-    """All megastones → True if in known set, else TBD."""
+    """All megastones → True if in known set, else TBD. kind='megastone'."""
     items = _load_items()
     out = {}
     for k, v in items.items():
         if v.get("megaStone") is None:
             continue
         jp = v.get("name", k)
+        entry: dict = {"kind": "megastone", "region": None, "jp_name": jp}
         if k in MEGASTONES_KNOWN_IMPLEMENTED:
-            out[k] = {"implemented": True, "jp_name": jp}
+            entry["implemented"] = True
         else:
-            out[k] = {
-                "implemented": "TBD",
-                "jp_name": jp,
-                "reason": "Champions 公式アナウンス要確認",
-            }
+            entry["implemented"] = "TBD"
+            entry["reason"] = "Champions 公式アナウンス要確認"
+        out[k] = entry
     return out
 
 
@@ -179,11 +192,20 @@ def build() -> dict:
     pokemon_entries.update(gen_gmax_entries())
     pokemon_entries.update(gen_regional_form_entries())
 
+    items_with_kind = {k: {**v, "kind": "item"} for k, v in ITEMS_STATIC.items()}
+    moves_with_kind = {k: {**v, "kind": "move"} for k, v in MOVES_STATIC.items()}
+
     return {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "items": ITEMS_STATIC,
-        "moves": MOVES_STATIC,
+        "schema_fields": {
+            "_required": ["implemented"],
+            "_optional": ["jp_name", "reason", "_note", "kind", "region"],
+            "_kind_values": ["item", "move", "gmax", "regional", "megastone"],
+            "_region_values": ["alola", "galar", "hisui", "paldea", None],
+        },
+        "items": items_with_kind,
+        "moves": moves_with_kind,
         "pokemon": pokemon_entries,
         "megastones": gen_megastone_entries(),
     }
