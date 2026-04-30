@@ -146,18 +146,34 @@ python3 -c "from lib.meta_fetcher import fetch_meta; \
 
 ## 5. 図表ファースト原則
 
-| 状況 | 必須図表 |
+### 5.1 情報量別 UI 発動ルール (v0.5.2 追加、ユーザー方針確定)
+
+応答の情報量に応じて出力方式を切り分ける:
+
+| 情報量 | 出力方式 | 判定基準 | 例 |
+|---|---|---|---|
+| **低** | markdown 手書き、サクッと | 1 値 / 1 ライン応答 | 「ガブの S?」→「102」/「ポルガイ威力?」→「110」/「タイプ?」→「ドラゴン/じめん」 |
+| **中** | markdown table 手書き | 3-7 行 / 単純表 | 「メガカイの種族値?」→ 1 行表 / 「ブラの技候補 4 つ?」→ リスト |
+| **高** | **visualizer 必須 (Bash 経由)** | 10+ 行 / 構造化情報 / 複数次元 | ダメ計 / 1 体詳細 / 6 体一覧 / 弱点表 / サイクル / メタ T3 / 環境ダメ |
+
+**判定の心構え**: 「ユーザーが画面で見て即理解できるか」が分かれ目。
+情報を 5 行以上の縦に並べる時、または 2 軸以上のクロス情報がある時は **visualizer を呼べ**。
+
+### 5.2 「高情報量」時の visualizer 自動発動マッピング
+
+| 状況 | 必須 visualizer 関数 |
 |---|---|
-| ダメ計 | テーブル + ASCII bar |
-| タイプ相性 | 4倍/2倍/1倍/½/¼/0 のグループ表 |
-| サイクル | `A → B → C ↩` ASCII flow |
-| 役割対象 | NxM マトリクス |
-| メタ | 横棒グラフ（横30文字 = max%） |
-| 選出優先度 | 1/2/3位を明示 |
+| ダメ計 (T1) | `render_damage_table` (HP ゲージ Pokemon 画面ライク) |
+| タイプ相性 | `render_type_matchup` (4倍/2倍/1倍/½/¼/0 のグループ表) |
 | 個体弱点/耐性 | `render_type_weakness_chart(types)` (絵文字 + JP) |
+| サイクル | `render_cycle_flow` (`A → B → C ↩` ASCII flow) |
+| 役割対象 | `render_role_matrix` (NxM マトリクス) |
+| メタ T3 | `render_usage_top` (横棒グラフ、横30文字 = max%) |
 | 環境ダメージ | `render_environmental_damage(...)` (ステロ/砂/天候、Gen 9 ルール) |
 | 種族値レーダー | `render_stats_radar(base_stats)` (横棒 + 5段階ドット) |
-| 構築 6 体 | `render_party()` または `scripts/show_party.py <build_id>` |
+| ポケ 1 体詳細 | `render_pokemon_card(pokemon_id, build_meta)` |
+| 構築 6 体 | `python3 scripts/show_party.py <build_id> [--weakness --radar]` |
+| 選出優先度 | 1/2/3位を明示 (markdown でも可、4 つ以上は visualizer) |
 
 `lib/visualizer.py` の `render_*` を活用。
 
