@@ -114,6 +114,50 @@
         "field": { "defenderSide": { "isSR": true } }
       },
       "expect": { "percent_min_at_least": 170, "percent_max_at_most": 220, "describe_must_include": "critical hit" }
+    },
+    {
+      "id": "11_aegislash_blade_poltergeist_floette_eternal_one_shot",
+      "label": "v0.6.0 Bug A regression: ブレードフォルム呪詛 vs フラエッテAS物理 (確 1 期待)",
+      "input": {
+        "gen": 9,
+        "attacker": { "name": "Aegislash-Blade", "item": "Spell Tag", "nature": "Quiet", "evs": { "spa": 252, "hp": 252 }, "ability": "Stance Change" },
+        "defender": { "name": "Floette-Eternal", "item": "Choice Specs", "nature": "Modest", "evs": { "hp": 4 }, "ability": "Flower Veil" },
+        "move": { "name": "Poltergeist" }
+      },
+      "expect": { "percent_min_at_least": 90, "percent_max_at_most": 130, "describe_must_include": "Aegislash-Blade" }
+    },
+    {
+      "id": "12_aegislash_normalized_to_shield",
+      "label": "v0.6.0 Bug A fix: Aegislash (suffix なし) → Shield 正規化 + ガブ Shadow Sneak で動作確認",
+      "input": {
+        "gen": 9,
+        "attacker": { "name": "Aegislash", "nature": "Adamant", "evs": { "atk": 252, "hp": 4 }, "ability": "Stance Change" },
+        "defender": { "name": "Garchomp", "nature": "Jolly", "evs": { "hp": 4, "spe": 252 }, "ability": "Rough Skin" },
+        "move": { "name": "Shadow Sneak" }
+      },
+      "expect": { "percent_min_at_least": 5, "percent_max_at_most": 25, "describe_must_include": "Aegislash-Shield" }
+    },
+    {
+      "id": "13_garchomp_poltergeist_no_item",
+      "label": "v0.6.0 Bug B regression: 持ち物なし相手に呪詛 → 0-dmg graceful 返却",
+      "input": {
+        "gen": 9,
+        "attacker": { "name": "Garchomp", "item": "Choice Band", "nature": "Jolly", "evs": { "atk": 252, "spe": 252 } },
+        "defender": { "name": "Mimikyu", "nature": "Jolly", "evs": { "hp": 4 }, "ability": "Disguise" },
+        "move": { "name": "Poltergeist" }
+      },
+      "expect": { "percent_max_at_most": 0, "describe_must_include": "no damage" }
+    },
+    {
+      "id": "14_garchomp_fling_no_item",
+      "label": "v0.6.0 Bug B regression: 自身持ち物なしで投げつける → 0-dmg graceful 返却",
+      "input": {
+        "gen": 9,
+        "attacker": { "name": "Garchomp", "nature": "Jolly", "evs": { "atk": 252, "spe": 252 } },
+        "defender": { "name": "Mimikyu", "nature": "Jolly", "evs": { "hp": 4 }, "ability": "Disguise" },
+        "move": { "name": "Fling" }
+      },
+      "expect": { "percent_max_at_most": 0, "describe_must_include": "no damage" }
     }
   ]
 }

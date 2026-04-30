@@ -1,25 +1,25 @@
 {
-  "generated_at": "2026-04-30T07:25:45.387Z",
-  "fixtures_total": 10,
-  "fixtures_passed": 10,
+  "generated_at": "2026-04-30T08:34:43.828Z",
+  "fixtures_total": 14,
+  "fixtures_passed": 14,
   "fixtures_failed": 0,
   "t1_latency": {
     "samples": [
-      79.66637500000002,
-      79.80075000000011,
-      80.66574999999989,
-      80.90945899999997,
-      80.93404099999998,
-      81.34083400000009,
-      81.42524999999989,
-      82.28612500000008,
-      83.72537499999999,
-      85.53800000000001
+      78.41920800000003,
+      79.85933399999999,
+      79.93783400000007,
+      80.0461670000002,
+      80.2348750000001,
+      80.69970799999987,
+      80.97424999999998,
+      82.4613330000002,
+      82.89166699999987,
+      85.5311670000001
     ],
-    "min_ms": 79.67,
-    "median_ms": 81.34,
-    "mean_ms": 81.63,
-    "max_ms": 85.54,
+    "min_ms": 78.42,
+    "median_ms": 80.7,
+    "mean_ms": 81.11,
+    "max_ms": 85.53,
     "budget_ms": 300,
     "budget_pass": true
   },
@@ -31,8 +31,8 @@
       "percent_max": 138.1,
       "ko_chance_n": 1,
       "desc": "252 Atk Choice Band Garchomp Earthquake vs. 4 HP / 0 Def Mimikyu: 295-348 (117 - 138%) -- guaranteed OHKO",
-      "wall_ms": 171.89,
-      "elapsed_ms_internal": 4.63,
+      "wall_ms": 95.13,
+      "elapsed_ms_internal": 4.38,
       "reasons": []
     },
     {
@@ -42,8 +42,8 @@
       "percent_max": 163.6,
       "ko_chance_n": 1,
       "desc": "252 Atk Life Orb Garchomp Earthquake vs. 252 HP / 0 Def Clodsire: 642-759 (138.3 - 163.5%) -- guaranteed OHKO",
-      "wall_ms": 81.77,
-      "elapsed_ms_internal": 4.06,
+      "wall_ms": 82.55,
+      "elapsed_ms_internal": 4.28,
       "reasons": []
     },
     {
@@ -53,8 +53,8 @@
       "percent_max": 218.5,
       "ko_chance_n": 1,
       "desc": "252 Atk Life Orb Tera Ground Garchomp Earthquake vs. 252 HP / 0 Def Clodsire: 858-1014 (184.9 - 218.5%) -- guaranteed OHKO",
-      "wall_ms": 85.89,
-      "elapsed_ms_internal": 3.62,
+      "wall_ms": 80.75,
+      "elapsed_ms_internal": 3.61,
       "reasons": []
     },
     {
@@ -64,8 +64,8 @@
       "percent_max": 114.4,
       "ko_chance_n": 1,
       "desc": "252 Atk Choice Band Garchomp Earthquake vs. 252 HP / 0 Def Garganacl: 390-462 (96.5 - 114.3%) -- 81.3% chance to OHKO",
-      "wall_ms": 80.57,
-      "elapsed_ms_internal": 4.14,
+      "wall_ms": 80.98,
+      "elapsed_ms_internal": 4.37,
       "reasons": []
     },
     {
@@ -75,8 +75,8 @@
       "percent_max": 28.6,
       "ko_chance_n": 4,
       "desc": "252+ Atk Huge Power Mawile-Mega Play Rough vs. 252 HP / 252+ Def Toxapex: 74-87 (24.3 - 28.6%) -- 98.9% chance to 4HKO",
-      "wall_ms": 81.7,
-      "elapsed_ms_internal": 4.58,
+      "wall_ms": 80.72,
+      "elapsed_ms_internal": 4.05,
       "reasons": []
     },
     {
@@ -86,8 +86,8 @@
       "percent_max": 83.7,
       "ko_chance_n": 2,
       "desc": "252 SpA Greninja Hydro Vortex (185 BP) vs. 252 HP / 252 SpD Tapu Koko: 244-288 (70.9 - 83.7%) -- guaranteed 2HKO",
-      "wall_ms": 82.15,
-      "elapsed_ms_internal": 4.78,
+      "wall_ms": 81.46,
+      "elapsed_ms_internal": 4.39,
       "reasons": []
     },
     {
@@ -97,8 +97,8 @@
       "percent_max": 68.4,
       "ko_chance_n": 2,
       "desc": "252 Atk Urshifu-Rapid-Strike Max Geyser (130 BP) vs. 4 HP / 0 Def Zacian-Crowned: 189-223 (57.9 - 68.4%) -- guaranteed 2HKO",
-      "wall_ms": 82.3,
-      "elapsed_ms_internal": 4.86,
+      "wall_ms": 77.91,
+      "elapsed_ms_internal": 4.33,
       "reasons": []
     },
     {
@@ -108,8 +108,8 @@
       "percent_max": 81.9,
       "ko_chance_n": 2,
       "desc": "252 Atk Life Orb burned Garchomp Earthquake vs. 252 HP / 0 Def Clodsire: 321-380 (69.1 - 81.8%) -- guaranteed 2HKO",
-      "wall_ms": 82.03,
-      "elapsed_ms_internal": 4.68,
+      "wall_ms": 78.77,
+      "elapsed_ms_internal": 4.19,
       "reasons": []
     },
     {
@@ -119,8 +119,8 @@
       "percent_max": 39.4,
       "ko_chance_n": 3,
       "desc": "252+ SpA Heatran Overheat vs. 252 HP / 252+ SpD Garganacl in Sun: 135-159 (33.4 - 39.3%) -- guaranteed 3HKO",
-      "wall_ms": 84.59,
-      "elapsed_ms_internal": 4.42,
+      "wall_ms": 77.78,
+      "elapsed_ms_internal": 3.84,
       "reasons": []
     },
     {
@@ -130,8 +130,52 @@
       "percent_max": 207.5,
       "ko_chance_n": 1,
       "desc": "252 SpA Iron Valiant Moonblast vs. 4 HP / 0 SpD Dragapult on a critical hit: 560-660 (176.1 - 207.5%) -- guaranteed OHKO",
-      "wall_ms": 80.49,
-      "elapsed_ms_internal": 4.1,
+      "wall_ms": 79.67,
+      "elapsed_ms_internal": 4.05,
+      "reasons": []
+    },
+    {
+      "id": "11_aegislash_blade_poltergeist_floette_eternal_one_shot",
+      "status": "PASS",
+      "percent_min": 91,
+      "percent_max": 107.6,
+      "ko_chance_n": 1,
+      "desc": "0 Atk Spell Tag Aegislash-Blade Poltergeist vs. 4 HP / 0 Def Floette-Eternal: 264-312 (91 - 107.5%) -- 43.8% chance to OHKO",
+      "wall_ms": 83.43,
+      "elapsed_ms_internal": 5.26,
+      "reasons": []
+    },
+    {
+      "id": "12_aegislash_normalized_to_shield",
+      "status": "PASS",
+      "percent_min": 11.7,
+      "percent_max": 14.2,
+      "ko_chance_n": 8,
+      "desc": "252+ Atk Aegislash-Shield Shadow Sneak vs. 4 HP / 0 Def Garchomp: 42-51 (11.7 - 14.2%) -- possible 8HKO",
+      "wall_ms": 80.88,
+      "elapsed_ms_internal": 5,
+      "reasons": []
+    },
+    {
+      "id": "13_garchomp_poltergeist_no_item",
+      "status": "PASS",
+      "percent_min": 0,
+      "percent_max": 0,
+      "ko_chance_n": 0,
+      "desc": "Garchomp Poltergeist vs. Mimikyu: 0-0 (0 - 0%) -- no damage (move conditions not met: e.g., Poltergeist/Fling requires item, Trick/Magic Room are status moves)",
+      "wall_ms": 82.17,
+      "elapsed_ms_internal": 2.25,
+      "reasons": []
+    },
+    {
+      "id": "14_garchomp_fling_no_item",
+      "status": "PASS",
+      "percent_min": 0,
+      "percent_max": 0,
+      "ko_chance_n": 0,
+      "desc": "Garchomp Fling vs. Mimikyu: 0-0 (0 - 0%) -- no damage (move conditions not met: e.g., Poltergeist/Fling requires item, Trick/Magic Room are status moves)",
+      "wall_ms": 78.14,
+      "elapsed_ms_internal": 2.83,
       "reasons": []
     }
   ]

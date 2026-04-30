@@ -55,6 +55,31 @@
 
 import { Generations, Pokemon, Move, Field, calculate } from "@smogon/calc";
 
+// v0.6.0 Bug A fix: Aegislash species normalization.
+// P6 conclusion: Among 26 forme-switching species, only Aegislash is unregistered
+// in @smogon/calc v0.11.0 when the suffix is omitted. The other 25 (Mimikyu,
+// Wishiwashi, Greninja, Lycanroc, Zygarde, Urshifu, Basculegion, Palafin,
+// Ogerpon, Calyrex, etc.) all resolve correctly without a forme suffix.
+// Aegislash → Aegislash-Shield (Stance Change default shield form,
+// HP60/Atk50/Def140/SpA50/SpD140/Spe60).
+const NORMALIZE_SPECIES: Record<string, string> = Object.freeze({
+  "Aegislash": "Aegislash-Shield",
+});
+
+function normalizeSpeciesName(name: string): string {
+  if (typeof name !== "string") return name;
+  // Use hasOwnProperty to prevent prototype pollution lookups.
+  if (Object.prototype.hasOwnProperty.call(NORMALIZE_SPECIES, name)) {
+    const normalized = NORMALIZE_SPECIES[name];
+    process.stderr.write(
+      `[WARN] Pokemon name '${name}' normalized to '${normalized}' (default Stance Change form). ` +
+        `Specify '${name}-Blade' or '${name}-Shield' explicitly to suppress.\n`,
+    );
+    return normalized;
+  }
+  return name;
+}
+
 type StatsTable = { hp: number; atk: number; def: number; spa: number; spd: number; spe: number };
 
 interface SideInput {
@@ -146,7 +171,9 @@ function buildPokemon(gen: ReturnType<typeof Generations.get>, p: PokemonInput):
   if (p.dynamaxLevel !== undefined) opts.dynamaxLevel = p.dynamaxLevel;
   if (p.abilityOn !== undefined) opts.abilityOn = p.abilityOn;
   if (p.curHP !== undefined) opts.curHP = p.curHP;
-  return new Pokemon(gen, p.name, opts);
+  // v0.6.0 Bug A fix: normalize species name before instantiation.
+  const speciesName = normalizeSpeciesName(p.name);
+  return new Pokemon(gen, speciesName, opts);
 }
 
 function buildMove(gen: ReturnType<typeof Generations.get>, m: MoveInput): Move {
@@ -207,8 +234,30 @@ function summarize(input: CalcInput): Record<string, unknown> {
   const percentMin = hp > 0 ? +((min / hp) * 100).toFixed(1) : 0;
   const percentMax = hp > 0 ? +((max / hp) * 100).toFixed(1) : 0;
 
-  const ko = result.kochance ? result.kochance() : { chance: 0, n: 0, text: "" };
-  const desc = result.fullDesc ? result.fullDesc() : "";
+  // v0.6.0 Bug B fix: 0-damage rolls trigger an assertion inside @smogon/calc's
+  // getKOChance() (e.g. Poltergeist/Fling without item, Trick/Magic Room status
+  // moves). result.fullDesc() also calls getKOChance internally, so both paths
+  // must be short-circuited with structured fallback values instead of throwing.
+  const isZeroDamage =
+    damage.length === 0 || damage[damage.length - 1] === 0;
+  const zeroDamageKoText =
+    "no damage (move conditions not met: e.g., Poltergeist/Fling requires item, Trick/Magic Room are status moves)";
+  const ko = isZeroDamage
+    ? { chance: 0, n: 0, text: zeroDamageKoText }
+    : result.kochance
+    ? result.kochance()
+    : { chance: 0, n: 0, text: "" };
+  let desc: string;
+  if (isZeroDamage) {
+    // Build a minimal description that mirrors the @smogon/calc format without
+    // invoking fullDesc() (which would call getKOChance and throw).
+    const atkName = input.attacker.name;
+    const defName = input.defender.name;
+    const moveName = input.move.name;
+    desc = `${atkName} ${moveName} vs. ${defName}: 0-0 (0 - 0%) -- ${zeroDamageKoText}`;
+  } else {
+    desc = result.fullDesc ? result.fullDesc() : "";
+  }
   const elapsedMs = +(performance.now() - t0).toFixed(2);
 
   return {
