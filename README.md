@@ -4,6 +4,7 @@ Pokemon Champions シングル6vs3対戦の **廃人トレーナーモード** C
 `/pokechamp` で発動するとセッション持続でガチ廃人ペルソナが起動し、ダメ計即時 / 構築アドバイス / 最新メタを 3-tier latency で提供する。
 **Champions 公式ナーフ (ムンフォ 30→10%, par 25→12.5% 等) を内部 overlay 適用**、ダメ計には Showdown 素値、ユーザー表示には Champions 仕様で完全分離。
 パラドックス・禁忌の四災・禁伝など **Reg M-A 規格外候補は TBD ガード** で誤評価防止 (v0.3.2)。
+**日次メタ対策メモ運用基盤** で環境 TOP20 + 自構築対策マトリクスを管理、構築マスターと並べて勝率改善サイクルを回せる (v0.4.x)。
 
 ---
 
@@ -80,7 +81,9 @@ cd ~/ai-pokemen/scripts && bun run_fixtures.ts              # 10 calc fixtures
 | ダメ計 (対面確認) | T1 | <300ms | 確定数 + 16通り乱数 + ASCIIバー |
 | 構築アドバイス / サイクル設計 | T2 | 1-5秒 | 役割対象マトリクス + 並び案複数 |
 | 最新メタ / 環境調査 | T3 | 5-30秒 | usage統計 + 鮮度マーク + 出典URL |
-| Champions 適合性判定 | 任意 | <10ms | `is_implemented(category, id)` で持ち物/技/ポケ/メガストーンの可否 |
+| Champions 適合性判定 | 任意 | <10ms | `is_implemented(category, id)` で持ち物/技/ポケ/メガストーンの可否 (3 値: True/False/"TBD") |
+| **メタ対策メモ参照** (v0.4.x) | 任意 | <100ms | `meta/META-LATEST.md` で環境 TOP20 + 対策マトリクス 90 セル + アーキ別選出 |
+| **構築 × メタ クロス分析** (v0.4.1) | 任意 | <100ms | `builds/A.3-Final-v7.8.md §13` で構築の環境位置付け + 直近変動の影響 |
 
 ペルソナは **ガチ廃人標準語・データ主導・図表ファースト・勝率最優先**。会話の中心ポケモン1体を選定し、応答末尾で `poke -n <英名>` を1回だけ呼んでターミナル背景を切替える (既存pokeコマンドへの依存)。
 
@@ -94,6 +97,7 @@ cd ~/ai-pokemen/scripts && bun run_fixtures.ts              # 10 calc fixtures
 - **メガストーン**: 93 件 (確認済 44 / TBD 49)
 - **TBD ガード対象** (構築提案前に ⚠ 警告): パラドックス 18 + 禁忌の四災 4 + 禁伝 12 + 準伝/幻 5 = **39 体** (Champions Reg M-A 規格外/未アナウンス、公式確認要)
 - **状態異常 Champions 仕様**: par 12.5% / frz 3T 解除 / slp 3T 起き保証 / やどりぎ 1/16
+- **日次メタ対策メモ** (v0.4.x): 環境 TOP20 + 対策マトリクス 90 セル + アーキ別選出 + メガ進化選択ガイド、HARD-GATE HG-1〜HG-5 検証付き
 - **日本語名**: 1221体 + 196形態 (PokeAPI 公式翻訳 + Showdown翻訳)
 
 ## 使い方
@@ -196,9 +200,14 @@ cd ~/ai-pokemen/scripts && bun run_fixtures.ts              # 10 calc fixtures
 │   └── parse_usage.py / update_meta.sh
 ├── builds/                                # 構築 SSOT (multi-build 管理)
 │   ├── INDEX.md                           # 全構築 Status 表 (active/experimental/testing/archived)
-│   ├── A.3-Final-v7.8.md                  # 現 active 構築 (メガ2体軸)
+│   ├── A.3-Final-v7.8.md                  # 現 active 構築 (メガ2体軸、§13 メタ統合分析含む)
 │   ├── _template.md                       # 新構築用テンプレ (13 節)
 │   └── archive/                           # 引退構築
+├── meta/                                  # ★ 日次メタ対策メモ運用基盤 (v0.4.0+)
+│   ├── META-LATEST.md                     # 環境 TOP20 + 対策マトリクス 90 セル + アーキ TOP5
+│   ├── CHANGELOG.md                       # 日次差分ログ (append-only)
+│   ├── README.md                          # 運用 SOP (HARD-GATE HG-1〜HG-5)
+│   └── archive/YYYY-MM-DD.md              # 大変動時スナップショット
 ├── battle_logs/                           # 対戦ログ (年/月別)
 ├── cache/
 │   ├── champs_usage/                      # 日次使用率 (gitignore)
@@ -324,6 +333,24 @@ bash ~/ai-pokemen/scripts/setup.sh                        # idempotent, end-to-e
 - 構築追加は `_template.md` から複製して 13 節埋める
 - bochi 同期メモ (`~/.claude/bochi-data/memos/pokechamp-*`) は本家 `builds/` の参照コピー (read-only)
 
+### 日次メタ運用 (v0.4.x)
+
+`meta/META-LATEST.md` で環境スナップショットを管理、`builds/A.3-Final-v7.8.md §13` でクロス分析:
+
+```
+朝 7:00 JST 自動 (schedule agent):
+  cache/champs_usage/ + cache/yt_transcripts/ 更新
+
+ユーザー /pokechamp 起動時:
+  1. META-LATEST §0 鮮度マトリクス確認 → stale なら更新提案
+  2. 該当セクションだけ書き換え + CHANGELOG に追記
+  3. 大変動時 archive/YYYY-MM-DD.md にスナップショット
+  4. bochi 同期 + 手動 S3 push (bash redirect は hook 発火しないため)
+```
+
+**HARD-GATE 5 軸** (HG-1 Champions 適合性 / HG-2 出典明記 / HG-3 鮮度マーク / HG-4 構築リンク整合 / HG-5 推測排除) で品質保証。
+詳細: `meta/README.md`
+
 ## ライセンス・出典
 
 - **@smogon/calc** (MIT, https://github.com/smogon/damage-calc) — ダメ計エンジン
@@ -336,7 +363,9 @@ bash ~/ai-pokemen/scripts/setup.sh                        # idempotent, end-to-e
 
 | Version | Date | 内容 |
 |---|---|---|
-| **v0.3.2** | 2026-04-30 | **Default-Permissive Trap 修正**: パオジアン誤評価事故の根本対策。`is_implemented` を 3 値返却 (True/False/"TBD") に修正、パラドックス 18 + 禁忌四災 4 + 禁伝 12 + 準伝 5 = 39 体を TBD 登録、schema 1.2.0、`requires_tbd_warning()` 追加、SKILL.md Sec 13 に「LLM 自己チェック手順」追加。forge_ace 上流に anti-pattern #13 同期 |
+| **v0.4.1** | 2026-04-30 | **構築 × メタ クロス統合**: A.3-Final-v7.8 §13 メタ統合分析追加 (構築本体不変、9 サブ節)、META-LATEST.md と双方向リンク、メガゲン弱体化分析 + メガカイ環境最適性スコアリング、苦手アーキ #5 物理対面型対応運用ルール |
+| v0.4.0 | 2026-04-30 | **日次メタ対策メモ運用基盤**: `meta/` ディレクトリ新設、META-LATEST.md (8 章 + 90 セル対策マトリクス + アーキ TOP5)、CHANGELOG.md (バージョニング規則)、META README.md (運用 SOP + HG-1〜HG-5)、archive/ スナップショット、bochi 同期 |
+| v0.3.2 | 2026-04-30 | **Default-Permissive Trap 修正**: パオジアン誤評価事故の根本対策。`is_implemented` を 3 値返却 (True/False/"TBD") に修正、パラドックス 18 + 禁忌四災 4 + 禁伝 12 + 準伝 5 = 39 体を TBD 登録、schema 1.2.0、`requires_tbd_warning()` 追加、SKILL.md Sec 13 に「LLM 自己チェック手順」追加。forge_ace 上流に anti-pattern #13 同期 |
 | v0.3.1 | 2026-04-30 | implementation.json schema 1.1.0 (kind/region 追加 — region 単位クエリ可)、setup.sh yt-dlp WARN 追加、README フル書換 |
 | v0.3.0 | 2026-04-30 | Champions overrides architecture (3 層 SSOT、overlay/raw 分離)、portability (clone-and-run、abs-path 0)、forge_ace 5-Agent Gate 通過 |
 | v0.2.0 | 2026-04-30 | 14 source tier system + DB-first build proposals |
