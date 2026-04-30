@@ -135,6 +135,68 @@ def _detect_region(key: str) -> str | None:
     return None
 
 
+# -----------------------------------------------------------------------------
+# Hand-curated TBD lists (Champions Reg M-A 規格外/未アナウンス)
+# -----------------------------------------------------------------------------
+# Reason: Reg M-A は SV ベースだが、パラドックス/禁忌の四災/禁伝/準伝は
+# Champions 公式実装言及がないため "TBD" 仮定。公式アナウンス確認後に修正する。
+
+PARADOX_ANCIENT = [
+    "roaringmoon", "screamtail", "brutebonnet", "fluttermane",
+    "sandyshocks", "slitherwing", "walkingwake", "gougingfire", "ragingbolt",
+]
+PARADOX_FUTURE = [
+    "ironbundle", "ironhands", "ironjugulis", "ironmoth", "ironthorns",
+    "ironvaliant", "ironleaves", "ironboulder", "ironcrown",
+]
+TREASURES_OF_RUIN = ["chienpao", "chiyu", "wochien", "tinglu"]
+
+LEGENDARY_OUT_OF_SCOPE = [
+    "koraidon", "miraidon", "eternatus",
+    "calyrex", "calyrexshadow", "calyrexice",
+    "zacian", "zaciancrowned", "zamazenta", "zamazentacrowned",
+    "kyogre", "groudon",
+]
+SEMI_LEGENDARY_TBD = [
+    "urshifu", "urshifurapidstrike", "marshadow", "magearna", "zarude",
+]
+
+
+def gen_tbd_pokemon_entries() -> dict[str, dict]:
+    """パラドックス/禁忌四災/規格外禁伝/準伝 → implemented='TBD'.
+
+    Champions Reg M-A は SV ベースだが、これらは公式実装アナウンス未確認のため
+    安全側で TBD とする。誤って 'Tier S' 等の評価を付けないための gate。
+    """
+    out: dict[str, dict] = {}
+    pdex = _load_pokedex()
+
+    def _add(ids: list[str], kind: str, reason: str) -> None:
+        for pid in ids:
+            if pid not in pdex:
+                # ID drift 検知: pokedex に無いものは skip (CI で検出可能)
+                continue
+            out[pid] = {
+                "implemented": "TBD",
+                "kind": kind,
+                "region": None,
+                "reason": reason,
+            }
+
+    _add(PARADOX_ANCIENT, "paradox",
+         "古代パラドックス: SV 新規だが Champions 公式実装言及なし、要確認")
+    _add(PARADOX_FUTURE, "paradox",
+         "未来パラドックス: SV 新規だが Champions 公式実装言及なし、要確認")
+    _add(TREASURES_OF_RUIN, "treasures_of_ruin",
+         "禁忌の四災: Champions Reg M-A での扱い未公式アナウンス")
+    _add(LEGENDARY_OUT_OF_SCOPE, "legendary",
+         "禁伝: Champions Reg M-A 規格外想定、公式レギュレーション要確認")
+    _add(SEMI_LEGENDARY_TBD, "legendary",
+         "準伝/幻: Champions 規格外/制限想定、公式アナウンス要確認")
+
+    return out
+
+
 def gen_gmax_entries() -> dict[str, dict]:
     """All gmax entries → implemented=False (not in Champions). kind='gmax'."""
     pdex = _load_pokedex()
@@ -191,17 +253,21 @@ def build() -> dict:
     pokemon_entries: dict[str, dict] = {}
     pokemon_entries.update(gen_gmax_entries())
     pokemon_entries.update(gen_regional_form_entries())
+    pokemon_entries.update(gen_tbd_pokemon_entries())
 
     items_with_kind = {k: {**v, "kind": "item"} for k, v in ITEMS_STATIC.items()}
     moves_with_kind = {k: {**v, "kind": "move"} for k, v in MOVES_STATIC.items()}
 
     return {
-        "schema_version": "1.1.0",
+        "schema_version": "1.2.0",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "schema_fields": {
             "_required": ["implemented"],
             "_optional": ["jp_name", "reason", "_note", "kind", "region"],
-            "_kind_values": ["item", "move", "gmax", "regional", "megastone"],
+            "_kind_values": [
+                "item", "move", "gmax", "regional", "megastone",
+                "paradox", "treasures_of_ruin", "legendary", "mythical",
+            ],
             "_region_values": ["alola", "galar", "hisui", "paldea", None],
         },
         "items": items_with_kind,

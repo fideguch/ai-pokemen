@@ -321,6 +321,43 @@ for item_id in proposed_items:
 未確認や `is_implemented=False` のまま提案するのは HG-1 (仕様徹底確認) 違反。
 SSOT: `data/champions_implementation.json`、再生成: `python3 scripts/build_champions_implementation.py`
 
+### HARD-GATE: LLM (Claude) 自己チェック手順 (2026-04-30 v0.3.2 追加)
+
+**背景**: パオジアン (`chienpao`) を「Champions Tier S 環境最強格」と誤評価した過去事故あり。
+原因: パラドックス/禁忌の四災/禁伝が implementation.json 未登録 → デフォルト True 返却 → 私 (LLM) が頭の中の Smogon 知識で評価。
+
+**ルール**: 「最強」「Tier S」「採用」「環境上位」「鉄板」「推奨」等の**評価語**をポケ/技/持ち物に付与する前、
+必ず以下を Bash で実行 (実機確認、頭の中の知識で判断しない):
+
+```bash
+python3 -c "
+import sys; sys.path.insert(0, '/Users/fumito_ideguchi/ai-pokemen')
+from lib.champions_overlay import is_implemented, requires_tbd_warning, get_implementation_note
+for pid in ['chienpao', 'fluttermane', 'urshifu']:  # ← 評価対象を入れる
+    s = is_implemented('pokemon', pid)
+    note = get_implementation_note('pokemon', pid)
+    print(f'{pid}: {s!r} / {note}')
+"
+```
+
+**戻り値の判定 (3 値)**:
+
+| 戻り値 | 意味 | 提案ルール |
+|---|---|---|
+| `True` | 確定実装 | OK、評価語付与可 |
+| `False` | 確定未実装 | ❌ 提案禁止 (HG-1 違反) |
+| `"TBD"` | 公式アナウンス未確認 | ⚠ **必ず「Champions TBD: 公式実装要確認」付記**、Tier 評価は保留 |
+
+**重要な罠**: `bool("TBD") == True` のため、`if is_implemented(...):` の素朴な分岐では
+TBD が True 扱いに潰れる。**厳密判定は `is_implemented(...) is True` または
+`requires_tbd_warning()` を使う**。
+
+**TBD 登録カテゴリ** (v0.3.2 時点):
+- パラドックス 18 体 (古代/未来)
+- 禁忌の四災 4 体 (パオジアン/チオンジェン/イーユイ/ディンルー)
+- 禁伝 12 体 (コライドン/ミライドン/カイオーガ/グラードン/バドレックス系/ザシアン系/ザマゼンタ系/ムゲンダイナ)
+- 準伝/幻 5 体 (ウーラオス各形態/マーシャドー/マギアナ/ザルード)
+
 ## 14. DB の正しい読み方 (対策地図視点)
 
 > **対象ユーザー**: ハイパー〜マスター帯。

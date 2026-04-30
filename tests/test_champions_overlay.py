@@ -136,10 +136,12 @@ class TestSchemaKindRegion(unittest.TestCase):
 
     def test_all_pokemon_have_kind(self):
         impl = load_implementation()
+        valid_kinds = ("gmax", "regional", "paradox", "treasures_of_ruin",
+                       "legendary", "mythical")
         for k, v in impl["pokemon"].items():
             self.assertIn("kind", v, f"{k} missing 'kind' field")
-            self.assertIn(v["kind"], ("gmax", "regional"),
-                          f"{k}.kind = {v['kind']!r}, expected gmax|regional")
+            self.assertIn(v["kind"], valid_kinds,
+                          f"{k}.kind = {v['kind']!r}, expected one of {valid_kinds}")
 
     def test_all_gmax_kind_consistent(self):
         impl = load_implementation()
@@ -175,6 +177,58 @@ class TestSchemaKindRegion(unittest.TestCase):
             self.assertEqual(v.get("kind"), "item", f"{k} missing kind=item")
         for k, v in impl["moves"].items():
             self.assertEqual(v.get("kind"), "move", f"{k} missing kind=move")
+
+
+class TestTbdGate(unittest.TestCase):
+    """v0.3.2: Paradox/Treasures-of-Ruin/Legendary must return 'TBD' (not True).
+
+    Root cause of previous bug: bool('TBD') == True, so unregistered or
+    poorly-registered entries silently passed HG-1 check. Fix: 3-value return
+    (True / False / 'TBD') + requires_tbd_warning() helper.
+    """
+
+    def test_chienpao_tbd(self):
+        from lib.champions_overlay import is_implemented, requires_tbd_warning
+        self.assertEqual(is_implemented("pokemon", "chienpao"), "TBD")
+        self.assertTrue(requires_tbd_warning("pokemon", "chienpao"))
+
+    def test_paradox_tbd(self):
+        from lib.champions_overlay import is_implemented
+        for pid in ("fluttermane", "ironvaliant", "roaringmoon", "ironbundle"):
+            self.assertEqual(is_implemented("pokemon", pid), "TBD",
+                             f"{pid} should be TBD (paradox)")
+
+    def test_legendary_tbd(self):
+        from lib.champions_overlay import is_implemented
+        for pid in ("koraidon", "miraidon", "calyrexshadow", "zaciancrowned"):
+            self.assertEqual(is_implemented("pokemon", pid), "TBD",
+                             f"{pid} should be TBD (legendary out-of-scope)")
+
+    def test_semi_legendary_tbd(self):
+        from lib.champions_overlay import is_implemented
+        for pid in ("urshifu", "urshifurapidstrike", "marshadow", "magearna"):
+            self.assertEqual(is_implemented("pokemon", pid), "TBD",
+                             f"{pid} should be TBD (semi-legendary)")
+
+    def test_normal_pokemon_default_true(self):
+        """Regression guard: 通常 SV ポケは引き続き True を返す (アラート過多防止)."""
+        from lib.champions_overlay import is_implemented, requires_tbd_warning
+        for pid in ("garchomp", "mawile", "tyranitar", "dragapult"):
+            self.assertIs(is_implemented("pokemon", pid), True,
+                          f"{pid} should remain default True")
+            self.assertFalse(requires_tbd_warning("pokemon", pid))
+
+    def test_gmax_still_false(self):
+        """Regression guard: gmax は False のまま (TBD 化していないこと)."""
+        from lib.champions_overlay import is_implemented
+        self.assertIs(is_implemented("pokemon", "venusaurgmax"), False)
+
+    def test_tbd_status_truthy_warning(self):
+        """Document the trap: bool('TBD') is True. Use `is True` for strict OK."""
+        from lib.champions_overlay import is_implemented
+        status = is_implemented("pokemon", "chienpao")
+        self.assertTrue(bool(status), "naive `if status:` check would PASS — known trap")
+        self.assertIsNot(status, True, "but `is True` correctly distinguishes")
 
 
 class TestLookupDesignInvariant(unittest.TestCase):

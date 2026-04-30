@@ -211,22 +211,40 @@ def get_ability_overlayed(aid: str) -> Optional[dict]:
 # -----------------------------------------------------------------------------
 
 
-def is_implemented(category: str, sid: str) -> bool:
-    """Return True if Champions implements this entity, False otherwise.
+def is_implemented(category: str, sid: str):
+    """Return Champions implementation status: True / False / "TBD".
 
-    Default: True (assume implemented unless explicitly marked otherwise).
+    Returns:
+        - True: 実装確定 (Champions で使える)
+        - False: 未実装確定 (構築提案禁止、HG-1 違反防止)
+        - "TBD": 公式アナウンス未確認 (⚠ 警告付き提案、ユーザー判断)
+
+    Default: True (登録なしポケは確定実装と仮定 — 通常 SV ポケはここ)
     Categories: "items" | "moves" | "pokemon" | "megastones"
+
+    NOTE: 戻り値は bool/str の 3 値。`if is_implemented(...):` は TBD も True 扱いに
+    なるので注意。厳密判定は `is_implemented(...) is True` または
+    `requires_tbd_warning(...)` を使う。
     """
     impl = load_implementation()
     cat = impl.get(category, {})
     entry = cat.get(sid)
     if entry is None:
-        # Unknown -> default True (no false negatives), but caller can use
-        # get_implementation_note to detect missing entries.
         return True
     if isinstance(entry, dict):
-        return bool(entry.get("implemented", True))
+        val = entry.get("implemented", True)
+        # Pass through "TBD" string; coerce other truthy/falsy to bool
+        if val == "TBD":
+            return "TBD"
+        return bool(val)
+    if entry == "TBD":
+        return "TBD"
     return bool(entry)
+
+
+def requires_tbd_warning(category: str, sid: str) -> bool:
+    """True iff is_implemented returns 'TBD' (構築提案時に ⚠ 警告必須)."""
+    return is_implemented(category, sid) == "TBD"
 
 
 def get_implementation_note(category: str, sid: str) -> Optional[str]:

@@ -119,7 +119,7 @@
 | フィールド | 型 | 必須 | 説明 |
 |---|---|---|---|
 | `implemented` | bool / "TBD" | ✅ | true=使用可 / false=使用不可 / "TBD"=確認待ち |
-| `kind` | string | ✅ (v1.1.0+) | "item" / "move" / "gmax" / "regional" / "megastone" |
+| `kind` | string | ✅ (v1.1.0+) | v1.2.0 拡張: "item" / "move" / "gmax" / "regional" / "megastone" / **"paradox"** / **"treasures_of_ruin"** / **"legendary"** / **"mythical"** |
 | `region` | string / null | ✅ (v1.1.0+) | "alola" / "galar" / "hisui" / "paldea" / null |
 | `jp_name` | string | optional | 日本語名 |
 | `reason` | string | optional | implemented=false/TBD の理由 |
@@ -145,6 +145,7 @@ jq '.pokemon | to_entries[] | select(.value.kind == "regional") | .value.region'
 
 - **1.0.0** (初期): `implemented` + `reason` + `jp_name` フラット構造
 - **1.1.0** (強化): `kind` + `region` 追加。**API 不変、追加フィールドのみ後方互換**。
+- **1.2.0** (TBD 安全側): kind 値拡張 (paradox/treasures_of_ruin/legendary/mythical)、39 TBD ポケ追加 (パラドックス・禁忌四災・禁伝・準伝)。`is_implemented` を 3 値返却 (True/False/"TBD") に修正 — `bool("TBD")==True` の罠を閉じた。**新規補助関数 `requires_tbd_warning()` 追加**。
 
 ## 関連ドキュメント
 
