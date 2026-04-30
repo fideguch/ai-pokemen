@@ -5,6 +5,7 @@ Pokemon Champions シングル6vs3対戦の **廃人トレーナーモード** C
 **Champions 公式ナーフ (ムンフォ 30→10%, par 25→12.5% 等) を内部 overlay 適用**、ダメ計には Showdown 素値、ユーザー表示には Champions 仕様で完全分離。
 パラドックス・禁忌の四災・禁伝など **Reg M-A 規格外候補は TBD ガード** で誤評価防止 (v0.3.2)。
 **日次メタ対策メモ運用基盤** で環境 TOP20 + 自構築対策マトリクスを管理、構築マスターと並べて勝率改善サイクルを回せる (v0.4.x)。
+**Pokemon 対戦画面ライク UI** (HP ゲージ / Pokemon Card / 弱点表 / 種族値レーダー / 環境ダメ加算 / neofetch 風 2 列 / show_party CLI) で図表ファースト出力 (v0.5.x)。
 
 ---
 
@@ -365,7 +366,11 @@ bash ~/ai-pokemen/scripts/setup.sh                        # idempotent, end-to-e
 
 | Version | Date | 内容 |
 |---|---|---|
-| **v0.4.1** | 2026-04-30 | **構築 × メタ クロス統合**: A.3-Final-v7.8 §13 メタ統合分析追加 (構築本体不変、9 サブ節)、META-LATEST.md と双方向リンク、メガゲン弱体化分析 + メガカイ環境最適性スコアリング、苦手アーキ #5 物理対面型対応運用ルール |
+| **v0.5.3** | 2026-04-30 | **Bash 出力 → 応答内 再展開 HARD-RULE**: SKILL.md Sec 5.3 追加。Claude Code UI が長文 stdout を `+N lines (ctrl+o to expand)` で隠す問題を構造的に防ぐため、visualizer/CLI の stdout を必ず応答メッセージ内コードブロックに再貼付するルールを mandate |
+| v0.5.2 | 2026-04-30 | **情報量別 UI 発動ルール明文化**: SKILL.md Sec 5 を 3 サブ節 (5.1 情報量判定 / 5.2 自動発動マッピング / 5.3 出力展開ルール) に分割。低 (1 値) → markdown 手書き、中 (3-7 行) → markdown table、高 (10+ 行) → visualizer 必須 |
+| v0.5.1 | 2026-04-30 | **UI 全方位拡充 7 機能**: 弱点/耐性チャート / カード weakness 統合 / 環境ダメ加算 / 種族値レーダー / neofetch 風 2 列 / show_party CLI / sprite サイズ指定。forge_ace 5-Agent Gate 全 PASS、既存 71 テスト 100% 維持、protected files diff 0 lines |
+| v0.5.0 | 2026-04-30 | **Pokemon-Battle-Screen-Like UI 改修**: HP ゲージ (左→右に残量減、🟢🟡🔴 emoji) / Pokemon Card UI (1 体ずつ大きく区切り、6 セクション構造) / ASCII sprite 統合 (pokemon-colorscripts/pokeget/pokego auto-detect) / Showdown export 形式 |
+| v0.4.1 | 2026-04-30 | **構築 × メタ クロス統合**: A.3-Final-v7.8 §13 メタ統合分析追加 (構築本体不変、9 サブ節)、META-LATEST.md と双方向リンク、メガゲン弱体化分析 + メガカイ環境最適性スコアリング、苦手アーキ #5 物理対面型対応運用ルール |
 | v0.4.0 | 2026-04-30 | **日次メタ対策メモ運用基盤**: `meta/` ディレクトリ新設、META-LATEST.md (8 章 + 90 セル対策マトリクス + アーキ TOP5)、CHANGELOG.md (バージョニング規則)、META README.md (運用 SOP + HG-1〜HG-5)、archive/ スナップショット、bochi 同期 |
 | v0.3.2 | 2026-04-30 | **Default-Permissive Trap 修正**: パオジアン誤評価事故の根本対策。`is_implemented` を 3 値返却 (True/False/"TBD") に修正、パラドックス 18 + 禁忌四災 4 + 禁伝 12 + 準伝 5 = 39 体を TBD 登録、schema 1.2.0、`requires_tbd_warning()` 追加、SKILL.md Sec 13 に「LLM 自己チェック手順」追加。forge_ace 上流に anti-pattern #13 同期 |
 | v0.3.1 | 2026-04-30 | implementation.json schema 1.1.0 (kind/region 追加 — region 単位クエリ可)、setup.sh yt-dlp WARN 追加、README フル書換 |

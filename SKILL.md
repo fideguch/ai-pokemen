@@ -177,6 +177,34 @@ python3 -c "from lib.meta_fetcher import fetch_meta; \
 
 `lib/visualizer.py` の `render_*` を活用。
 
+### 5.3 Bash 出力 → 応答メッセージ内に必ず再展開 (v0.5.3 追加、HARD-RULE)
+
+**背景**: Claude Code UI は Bash の長文 stdout を `+N lines (ctrl+o to expand)` で
+**自動折りたたみ**する。「上記の通り」「Bash 出力参照」と書いてもユーザーには見えない。
+
+**ルール**:
+
+| 状況 | 必須行動 |
+|---|---|
+| Bash で `show_party.py` 等の visualizer/CLI を実行 | **stdout 全文を私の応答メッセージ内にコードブロックで貼り付ける** |
+| Bash で `lookup_move.py` 等の単発出力 | 同上 (折りたたまれない短さでも安全側で貼付) |
+| Bash で `git status` `wc -l` 等の補助コマンド | 数値要約のみ私のメッセージに書く (全文貼付不要) |
+| Bash 結果が 5 行超 | **必ず展開貼付**、Claude Code UI に隠されないように |
+
+**禁止表現**:
+- 「上記の通り」「Bash 出力を参照」「stdout を見て」 ← UI で隠れる前提を無視している
+- visualizer 出力を Bash 結果としてしか提示しない (= 見えない可能性)
+
+**正しい出力フロー**:
+
+```
+1. Bash で visualizer/CLI を実行 (stdout 取得)
+2. 私の応答メッセージ内に ```...``` で全文貼付
+3. その上で廃人補足 / メタ視点 / 次アクションを 3-5 行追加
+```
+
+これで「visualizer 自動発動 (5.1) + 確実にユーザーに見せる (5.3)」が両立する。
+
 ### v0.5.1 追加 UI (opt-in)
 
 | 機能 | 呼び出し方 | デフォルト |
