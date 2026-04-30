@@ -154,8 +154,32 @@ python3 -c "from lib.meta_fetcher import fetch_meta; \
 | 役割対象 | NxM マトリクス |
 | メタ | 横棒グラフ（横30文字 = max%） |
 | 選出優先度 | 1/2/3位を明示 |
+| 個体弱点/耐性 | `render_type_weakness_chart(types)` (絵文字 + JP) |
+| 環境ダメージ | `render_environmental_damage(...)` (ステロ/砂/天候、Gen 9 ルール) |
+| 種族値レーダー | `render_stats_radar(base_stats)` (横棒 + 5段階ドット) |
+| 構築 6 体 | `render_party()` または `scripts/show_party.py <build_id>` |
 
 `lib/visualizer.py` の `render_*` を活用。
+
+### v0.5.1 追加 UI (opt-in)
+
+| 機能 | 呼び出し方 | デフォルト |
+|---|---|---|
+| 弱点/耐性チャート | `render_pokemon_card(..., show_weakness=True)` | `False` |
+| 種族値レーダー | `render_pokemon_card(..., show_radar=True)` | `False` |
+| 2 列コンパクト表示 | `render_pokemon_card_compact(pokemon_id, build_meta)` | sprite なしなら縦表示にフォールバック |
+| sprite サイズ指定 | `render_pokemon_sprite(..., size="small"|"medium"|"large")` | `"medium"` |
+| 構築 CLI | `python3 scripts/show_party.py <build_id> [--compact|--weakness|--radar|--shiny|--no-sprite|--size N]` | builds/`<build_id>`.md |
+
+> **Path traversal 対策**: `show_party.py` は `build_id` を `^[A-Za-z0-9._-]+$` で検証し、
+> resolve 後 `BUILDS_DIR` 配下であることを `is_relative_to` でアサート。
+> `../../etc/passwd` 等は open() 前に exit 2 で却下。
+
+> **Gen 9 環境ダメ計ルール** (`render_environmental_damage`):
+> - ステロ: 1/8 max HP × 岩タイプ倍率 (0.5 / 1 / 2 / 4)、出落ち 1 回
+> - 砂嵐: 1/16 / ターン (Rock / Steel / Ground は無効)
+> - ヒョウ/雪: 1/16 / ターン (Ice 無効) ※Gen 9 'Snow' はチップなし、旧世代用に保持
+> - 晴れ/雨: チップダメなし
 
 ## 6. 末尾アクション: 中心ポケ1体を背景連動
 
