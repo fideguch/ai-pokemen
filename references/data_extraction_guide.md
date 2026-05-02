@@ -16,6 +16,53 @@ WebFetch Prompt:
    各ポケモン名と現在の順位を表形式で。最終更新日時も明記。"
 ```
 
+### 全体使用率 TOP200 全件取得 (niche 技調査用、HG-niche-depth)
+
+```
+URL  : https://champs.pokedb.tokyo/pokemon/list?rule=0    (同URLで TOP213 まで掲載)
+WebFetch Prompt:
+  "Pokemon Champions シングル使用率ランキング全件を抽出。
+   TOP30で打ち切らず、可能な限り下位まで(TOP100-200まで、もしくは全件)、
+   順位/ポケモン名を表で列挙。
+   特に [挑発/トリック/道連れ/アンコール/コットンガード/おきみやげ/こうそくスピン]
+   等の niche 技を主力で使うポケが掲載されていれば順位を強調。
+   ページネーションがあれば次ページのURLパターンも教えて。"
+```
+
+注意点:
+- TOP30 までは使用率% 表示あり、TOP31以降は順位とポケ名のみで使用率% 非表示
+- → 真の採用率取得は **個別ページ** 必須 (次節)
+- pokechamdb.com も同URL同フォーマット (TOP213 まで掲載)、両者は同統計系列のため数字一致するが**信頼度根拠ではない**
+
+### niche 技採用率の網羅取得プロトコル (HG-niche-depth)
+
+```bash
+# 推奨: スクリプト一発で全自動
+python3 ~/.claude/skills/pokemon-champions/scripts/fetch_niche_users.py ちょうはつ
+# → cache/niche_users/YYYY-MM-DD/ちょうはつ.json に結果保存
+
+# 引数なしで対象一覧表示
+python3 ~/.claude/skills/pokemon-champions/scripts/fetch_niche_users.py
+```
+
+スクリプトは以下を実行:
+
+1. champs.pokedb.tokyo TOP213 全件取得
+2. 各ポケの個別ページ `pokemon/show/[番号]-[フォーム]?rule=0` を順次 fetch (24h cache)
+3. 該当 niche 技採用率%を抽出
+4. 特性「いたずらごころ / ばけのかわ / ふゆう」での先制/無効化を反映した脅威度評価
+5. 上位順 JSON 出力
+
+WebFetch 個別呼出例 (スクリプトが使えない時のフォールバック):
+
+```
+URL  : https://champs.pokedb.tokyo/pokemon/show/0547-00?rule=0    (例: エルフーン)
+WebFetch Prompt:
+  "[ポケ名]の持ち物採用率TOP5、技採用率TOP10 (各%付き)、特性採用率、
+   性格採用率TOP3、努力値分布TOP3、共起ポケTOP5 を表で抽出。
+   特に [ちょうはつ/トリック/...] の採用率を強調。集計期間も明記。"
+```
+
 ### 個別ポケの型データ取得
 
 ```

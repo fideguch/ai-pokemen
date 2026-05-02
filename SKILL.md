@@ -426,6 +426,38 @@ TBD が True 扱いに潰れる。**厳密判定は `is_implemented(...) is True
 - 禁伝 12 体 (コライドン/ミライドン/カイオーガ/グラードン/バドレックス系/ザシアン系/ザマゼンタ系/ムゲンダイナ)
 - 準伝/幻 5 体 (ウーラオス各形態/マーシャドー/マギアナ/ザルード)
 
+### HARD-GATE: niche-depth ranking 必須 (2026-05-01 v0.5.4 追加)
+
+**背景**: 「Champions 環境の挑発持ちは?」という質問に TOP30 圏内 4 体 (ゲンガー/ミミッキュ/ロトム/リザY) で打ち切り、本命の **エルフーン (56位 / 挑発採用率 22.4% / いたずらごころ 97.6% で先制挑発)** を完全に見落とした事故 (2026-05-01)。原因: TOP30 で「該当なし」と早期結論 + game8 等ホワイトリスト外サイトに依存 + niche 技採用率は使用率と直交することを軽視。
+
+**ルール**: T3 / MIXED で **niche 妨害技** を主力に持つポケを語る場合、TOP30 で打ち切ってはならない。
+
+**niche 妨害技 (確定リスト)**:
+- ちょうはつ / トリック / すりかえ / みちづれ / アンコール
+- コットンガード / おきみやげ / こうそくスピン
+- どくびし / ステルスロック (擬似 niche、撒き役競合視点)
+- キノコのほうし / ねむりごな / あくびのうた / さいみんじゅつ
+- ふくろだたき / みがわり / コーチング (壁役競合)
+- いやしのねがい / みかづきのまい (退場系)
+
+**必須手順**:
+1. `https://champs.pokedb.tokyo/pokemon/list?rule=0` で **TOP200 まで全件 fetch** (champs.pokedb は 213 位まで掲載)
+2. niche 技を覚えるポケのうち **TOP30 圏外候補を全列挙**
+3. 各候補の `pokemon/show/[番号]-[フォーム]?rule=0` で niche 技採用率%を取得 (5%閾値の境界例も明記)
+4. 特に **「いたずらごころ / ばけのかわ / ふゆう」** で先制 / 無効化を持つポケは脅威度上位扱い
+5. **`scripts/fetch_niche_users.py <技日本語名>` を実行**して結果 JSON を `cache/niche_users/YYYY-MM-DD/<move>.json` に保存
+
+**違反パターン**:
+
+| NG | OK |
+|---|---|
+| TOP30 圏内 4 体で「該当なし」と結論 | TOP200 fetch + 個別採用率% で「真の主犯」抽出 |
+| 「使用率低 = メタ影響なし」 | 「使用率 5% でも該当技採用率 50% なら脅威」と評価 |
+| 採用率 5%未満 = 「実装例なし」と書く | 「閾値外」が正、稀構築では実在する |
+| game8 / altema / gamewith で間に合わせ | Tier S+ 3 サイト (champs.pokedb / pokechamdb / yakkun) のみ |
+
+**自動制御**: `~/.claude/scripts/hooks/pokechamp-niche-guard.sh` (UserPromptSubmit hook) が niche 技キーワードを検出し、本 HG-niche-depth 違反を未然に警告する。
+
 ## 14. DB の正しい読み方 (対策地図視点)
 
 > **対象ユーザー**: ハイパー〜マスター帯。
@@ -548,3 +580,51 @@ DB の数字 (使用率 / 採用率) は **2 通りの読み方** がある。
 | `references/role_theory.md` | 古典役割理論の整理 |
 | `references/meta_glossary.md` | 廃人用語集 |
 | `references/persona_guide.md` | ペルソナ運用 + 廃人↔標準対応表 30+ |
+
+## 19. Scheduled Updates (HARD-RULE: 定期更新は OS レベル launchd で固定化)
+
+> **背景** (2026-05-03 ユーザー指摘で追加): 鮮度命層 (champs_usage 6h / yt 24h / niche 24h) を
+> Claude Code セッション任せにすると CLI 未起動時間で確実に期限切れする。
+> OS レベルで launchd ジョブを 3 本固定化し、SessionStart hook で死活監視する二層防御を採用。
+
+### 19.1 launchd ジョブ仕様 (SSOT: `~/Library/LaunchAgents/com.fideguch.pokechamp-*.plist`)
+
+| Label | スケジュール | 実行内容 | 出力先 | TTL |
+|-------|-------------|---------|--------|-----|
+| `com.fideguch.pokechamp-fetch-usage` | StartInterval 21600 (6h) | `python3 scripts/fetch_champs_usage.py` | `cache/champs_usage/YYYY-MM-DD.json` | 6h (内部 gate) |
+| `com.fideguch.pokechamp-fetch-yt` | Daily 06:00 JST | `python3 scripts/fetch_yt_transcripts.py` | `cache/yt_transcripts/YYYY-MM-DD/` | 24h |
+| `com.fideguch.pokechamp-fetch-niche` | Daily 05:00 JST | `bash scripts/fetch_all_niche.sh` (NICHE_USERS_SEED 全 11 技 loop) | `cache/niche_users/YYYY-MM-DD/<move>.json` | 24h |
+
+### 19.2 SessionStart 死活監視 (`~/.claude/scripts/hooks/pokechamp-ensure-schedule.sh`)
+
+- Claude Code 起動時に `launchctl list <label>` で 3 ジョブの存在を確認
+- 欠落あれば `scripts/setup_scheduled_updates.sh` を auto-restore で実行
+- fail-soft: hook 自体は常に exit 0 (Claude Code 起動を絶対にブロックしない)
+- ログ: `~/.claude/logs/pokechamp-ensure-schedule.log`
+
+### 19.3 セットアップ / 動作確認 / 無効化
+
+詳細手順とトラブルシュート: `~/.claude/scripts/hooks/README-pokechamp-launchd.md`
+
+```bash
+# 初回セットアップ (冪等)
+bash /Users/fumito_ideguchi/ai-pokemen/scripts/setup_scheduled_updates.sh
+
+# 登録確認
+launchctl list | grep -E "fideguch\.pokechamp"
+
+# 即時 kickstart (TTL 無視したい場合は --force を手動コマンドで)
+launchctl kickstart -k gui/$(id -u)/com.fideguch.pokechamp-fetch-usage
+
+# ログ tail
+tail -f ~/.claude/logs/pokechamp-fetch-{usage,yt,niche}.out.log
+```
+
+### 19.4 設計上の注意
+
+- **plist は ai-pokemen リポジトリの外** (`~/Library/LaunchAgents/`) に置く必要があり、
+  リポジトリには `scripts/setup_scheduled_updates.sh` 経由で再生成する設計を採る
+- **重複防御**: launchd (OS層) + SessionStart hook (Claude Code層) の二段
+- **niche_users SEED の SSOT** は `scripts/fetch_niche_users.py:NICHE_USERS_SEED`。
+  `fetch_all_niche.sh` は Python で SEED を読み出して loop するため、技を増やす際の二重管理は発生しない
+- **失敗隔離**: `fetch_all_niche.sh` は 1 技 FAIL でも他の 10 技処理を続行
