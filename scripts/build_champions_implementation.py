@@ -72,6 +72,10 @@ MEGASTONES_KNOWN_IMPLEMENTED: set[str] = {
     "charizarditex", "charizarditey",
     "gengarite",
     "garchompite",
+    # Champions-original Mega (not in canonical gen6/7): verified implemented in M-2.
+    # Primary source (fetched 2026-06-05): yakkun.com/ch (Tier S+, 公式扱い) 図鑑/育成論 +
+    #   champs.pokedb.tokyo フォームページ。補助確認: game8/gamewith (事実のみ)。入手=ZA連動ふしぎなおくりもの。
+    "greninjite",
     "tyranitarite",
     "scizorite",
     "lucarionite",

@@ -8,6 +8,20 @@
 > ユーザー指摘で「動画偏重 → 公式サイト優先」に再構築。
 > **数字 (採用率/型/使用率) は DB 系 (Tier S+) 必須**。動画は感覚値・補完。
 
+> **ソース運用方針 v3.1 (2026-06-05 ユーザー確定 / HARD-RULE)**:
+> ユーザーが信頼するメタ一次ソースは以下の **2 DB + YouTube日次** に限定する。
+>
+> | 呼称 (ユーザー) | URL | 役割 |
+> |---|---|---|
+> | **Pokemon Battle Database** | `champs.pokedb.tokyo` | メタ一次 (使用率/型/採用率) |
+> | **Pokemon Battle Support** | `pokechamdb.com` | メタ一次・裏取り |
+> | YouTube 日次 | ポケソル / KYOUPOKE / くろこ | 「なぜ強いか」の補完、最先端トレンド |
+>
+> - **game8 / gamewith は「数値・事実確認のみ」**: 種族値・技数値・入手方法の確認に限り使用可。
+>   **メタ/環境/攻略/Tier の根拠には使用禁止** (過去作情報が混在し迷いやすい + 環境追従が遅く品質が低い)。
+>   検索時は必ず **Pokemon Champions に限定** する (過去作混入を排除)。
+> - **基本動作**: 2 DB で数字を取り、YouTube を毎日取りに行くのが正解。
+
 ---
 
 ## Tier S+ — 構築の数字根拠 (最優先・必須)
@@ -105,14 +119,18 @@ https://yakkun.com/ch/items.htm                           ← 持ち物一覧
 
 ---
 
-## Tier B — 二次まとめ (裏取り、結論を変えない)
+## Tier B — 二次まとめ (数値・事実確認のみ、メタ根拠に使わない)
 
-| URL | 用途 |
-|-----|------|
-| `https://game8.jp/pokemon-champions/` | 個別育成論まとめ |
-| `https://altema.jp/pokemonchampions/` | TIER 表 |
-| `https://gamewith.jp/pokemon-champions/` | 個別解説 |
-| `https://gamerch.com/pokemonchampions/` | TOP100 |
+> ⚠ **HARD-RULE (2026-06-05)**: この層は **種族値/技数値/入手方法 等の事実確認専用**。
+> **使用率・Tier・環境評価・構築の根拠に使ってはならない** (過去作混在 + 環境追従が遅い)。
+> メタ判断は必ず Tier S+ (champs.pokedb / pokechamdb) + Tier S (YouTube) を使う。
+
+| URL | 許可用途 (事実のみ) | 禁止用途 |
+|-----|------|------|
+| `https://game8.jp/pokemon-champions/` | 種族値・技・入手方法・育成論の数値 | Tier表/環境評価/メタ判断 |
+| `https://gamewith.jp/pokemon-champions/` | 同上 | 同上 |
+| `https://altema.jp/pokemonchampions/` | (参考) | TIER 表をメタ根拠に使うの禁止 |
+| `https://gamerch.com/pokemonchampions/` | 図鑑番号/フォーム確認 | 使用率をメタ根拠に使うの禁止 |
 
 ---
 
