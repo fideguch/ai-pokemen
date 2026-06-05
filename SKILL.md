@@ -281,6 +281,13 @@ echo '{"gen":9,"attacker":{"name":"Garchomp","item":"Choice Band","nature":"Joll
 
 入出力スキーマ: `scripts/calc_wrapper.ts` 冒頭コメント参照。
 
+> **★ Champions 正確ダメ計 (v0.9.0 / 2026-06-05 HARD-RULE)**: Champions は **EV 合計510制限が無い**
+> (実機スプレッドは合計512-516が常態) ため、標準 252/252 や EV 逆算は実機と乖離する。
+> **ダメ計は実数値を直接入力する** = attacker/defender に `rawStats:{hp,atk,def,spa,spd,spe}` を渡す
+> (ダメ系プラス等の実数値をそのまま)。`rawStats` 指定時は evs/ivs/nature を無視し実数値を再現する
+> (Lv50 専用、内部で baseStats を逆算)。標準 252/252 仮定は「最速 S」「相手の耐久型」を誤認する原因。
+> 例: `{"name":"Greninja-Mega","level":50,"ability":"Protean","rawStats":{"hp":164,"atk":130,"def":97,"spa":199,"spd":101,"spe":183}}`
+
 ### lib/lookup.py
 
 ```python

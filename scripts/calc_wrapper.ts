@@ -107,6 +107,11 @@ interface PokemonInput {
   nature?: string;
   evs?: Partial<StatsTable>;
   ivs?: Partial<StatsTable>;
+  // Champions-accurate path: pass the in-game 実数値 (final Lv50 stats, as shown by
+  // "ダメ系プラス" / the in-game summary) directly. When present, these OVERRIDE the
+  // evs/ivs/nature computation. Champions has NO 510 EV total cap, so EV-reconstruction
+  // is lossy; rawStats is the source of truth. Provide all 6 (hp/atk/def/spa/spd/spe).
+  rawStats?: Partial<StatsTable>;
   boosts?: Partial<Omit<StatsTable, "hp">>;
   status?: "brn" | "psn" | "tox" | "par" | "slp" | "frz" | "";
   teraType?: string;
@@ -155,15 +160,43 @@ function readStdin(): Promise<string> {
   });
 }
 
+// v0.9.0: given a desired final stat value, find the baseStat that reproduces it
+// with EV=0 / IV=31 / neutral nature at the given level. @smogon/calc's damage
+// formula reads `rawStats` (recomputed from baseStats+evs+nature on every clone),
+// so injecting `.stats`/`.rawStats` post-construction is silently discarded by
+// calculate()'s internal clone. The robust path is to override `species.baseStats`
+// (which clone() preserves via `overrides: this.species`) so calcStat() yields the
+// exact in-game 実数値. This makes the calc Champions-accurate even though Champions
+// has NO 510 EV total cap (so EV-reconstruction would be lossy/impossible).
+function baseStatForTarget(stat: keyof StatsTable, target: number, level: number): number {
+  const iv = 31;
+  // Shedinja-style fixed 1 HP (calc treats baseHP===1 specially).
+  if (stat === "hp" && target <= 1) return target <= 0 ? 0 : 1;
+  // Find the base that reproduces `target` exactly; if none (parity gap at higher
+  // levels, or target out of the 0-255 reachable range), return the CLOSEST base so
+  // the error degrades gracefully to ±1 rather than clamping to a wildly wrong value.
+  let bestB = 0;
+  let bestDiff = Infinity;
+  for (let b = 0; b <= 255; b++) {
+    const inner = Math.floor(((2 * b + iv) * level) / 100);
+    const v = stat === "hp" ? inner + level + 10 : inner + 5; // neutral nature, EV 0
+    if (v === target) return b;
+    const diff = Math.abs(v - target);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestB = b;
+    }
+  }
+  return bestB;
+}
+
 function buildPokemon(gen: ReturnType<typeof Generations.get>, p: PokemonInput): Pokemon {
   if (!p.name) throw new Error("attacker/defender.name required");
   const opts: Record<string, unknown> = {};
+  const level = p.level !== undefined ? p.level : 100;
   if (p.level !== undefined) opts.level = p.level;
   if (p.item) opts.item = p.item;
   if (p.ability) opts.ability = p.ability;
-  if (p.nature) opts.nature = p.nature;
-  if (p.evs) opts.evs = p.evs;
-  if (p.ivs) opts.ivs = p.ivs;
   if (p.boosts) opts.boosts = p.boosts;
   if (p.status !== undefined) opts.status = p.status;
   if (p.teraType) opts.teraType = p.teraType;
@@ -171,8 +204,38 @@ function buildPokemon(gen: ReturnType<typeof Generations.get>, p: PokemonInput):
   if (p.dynamaxLevel !== undefined) opts.dynamaxLevel = p.dynamaxLevel;
   if (p.abilityOn !== undefined) opts.abilityOn = p.abilityOn;
   if (p.curHP !== undefined) opts.curHP = p.curHP;
-  // v0.6.0 Bug A fix: normalize species name before instantiation.
+
   const speciesName = normalizeSpeciesName(p.name);
+
+  if (p.rawStats) {
+    // Champions-accurate path: reproduce exact 実数値 via baseStats override.
+    // Ignore evs/ivs/nature (they would perturb the target); leave defaults
+    // (EV 0 / IV 31 / neutral) so calcStat() returns the target verbatim.
+    // The reverse-derivation uses the gen 3+ ADV stat formula — guard older gens.
+    const genNum = (gen as { num?: number }).num;
+    if (genNum !== undefined && genNum < 3) {
+      throw new Error("rawStats is only supported for gen 3+ (ADV stat formula)");
+    }
+    opts.level = level; // pin level so the derivation and Pokemon agree
+    const speciesId = speciesName.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const speciesDef = (gen as { species: { get: (id: string) => { baseStats?: StatsTable } | undefined } })
+      .species.get(speciesId);
+    if (!speciesDef || !speciesDef.baseStats) {
+      throw new Error(`Unknown species for rawStats: ${speciesName}`);
+    }
+    const overriddenBase: StatsTable = { ...speciesDef.baseStats };
+    const keys: (keyof StatsTable)[] = ["hp", "atk", "def", "spa", "spd", "spe"];
+    for (const k of keys) {
+      const tgt = p.rawStats[k];
+      if (tgt !== undefined) overriddenBase[k] = baseStatForTarget(k, tgt, level);
+    }
+    opts.overrides = { baseStats: overriddenBase };
+    return new Pokemon(gen, speciesName, opts);
+  }
+
+  if (p.nature) opts.nature = p.nature;
+  if (p.evs) opts.evs = p.evs;
+  if (p.ivs) opts.ivs = p.ivs;
   return new Pokemon(gen, speciesName, opts);
 }
 
